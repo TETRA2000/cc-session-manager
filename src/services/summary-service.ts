@@ -74,10 +74,7 @@ function formatMessagesForPrompt(entries: TranscriptEntry[]): string {
 export async function generateSummary(
   entries: TranscriptEntry[],
 ): Promise<string> {
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set");
-
-  const client = new Anthropic({ apiKey });
+  const client = new Anthropic();
   const conversation = formatMessagesForPrompt(entries);
 
   const response = await client.messages.create({
@@ -110,7 +107,6 @@ export async function refreshSummaries(
   sessions: SessionSummary[],
 ): Promise<void> {
   if (refreshInProgress) return;
-  if (!Deno.env.get("ANTHROPIC_API_KEY")) return;
 
   refreshInProgress = true;
   try {

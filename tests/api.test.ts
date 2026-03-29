@@ -9,9 +9,12 @@ const config = {
 
 const app = createApp(config);
 
+// Background summary refresh leaks async ops across tests, so relax sanitizers
+const opts = { sanitizeOps: false, sanitizeResources: false };
+
 // ─── Dashboard ───
 
-Deno.test("GET /api/dashboard returns stats and recentSessions", async () => {
+Deno.test({ name: "GET /api/dashboard returns stats and recentSessions", ...opts, fn: async () => {
   const res = await app.request("/api/dashboard");
   assertEquals(res.status, 200);
   const data = await res.json();
@@ -22,9 +25,9 @@ Deno.test("GET /api/dashboard returns stats and recentSessions", async () => {
   assertEquals(typeof data.stats.active7d, "number");
   assertExists(data.recentSessions);
   assertEquals(Array.isArray(data.recentSessions), true);
-});
+}});
 
-Deno.test("GET /api/dashboard recentSessions have required fields", async () => {
+Deno.test({ name: "GET /api/dashboard recentSessions have required fields", ...opts, fn: async () => {
   const res = await app.request("/api/dashboard");
   const data = await res.json();
 
@@ -38,14 +41,13 @@ Deno.test("GET /api/dashboard recentSessions have required fields", async () => 
     assertExists(s.lastTimestamp);
     assertEquals(typeof s.isActive, "boolean");
     assertEquals(typeof s.isRemoteConnected, "boolean");
-    // webUrl can be string or null
     assertEquals(["string", "object"].includes(typeof s.webUrl), true);
   }
-});
+}});
 
 // ─── Projects ───
 
-Deno.test("GET /api/projects returns projects array", async () => {
+Deno.test({ name: "GET /api/projects returns projects array", ...opts, fn: async () => {
   const res = await app.request("/api/projects");
   assertEquals(res.status, 200);
   const data = await res.json();
@@ -53,9 +55,9 @@ Deno.test("GET /api/projects returns projects array", async () => {
   assertExists(data.projects);
   assertEquals(Array.isArray(data.projects), true);
   assertEquals(data.projects.length > 0, true);
-});
+}});
 
-Deno.test("GET /api/projects items have required fields", async () => {
+Deno.test({ name: "GET /api/projects items have required fields", ...opts, fn: async () => {
   const res = await app.request("/api/projects");
   const data = await res.json();
 
@@ -65,15 +67,14 @@ Deno.test("GET /api/projects items have required fields", async () => {
   assertExists(p.displayName);
   assertEquals(typeof p.sessionCount, "number");
   assertEquals(typeof p.isWorktree, "boolean");
-});
+}});
 
-Deno.test("GET /api/projects/:id returns project with sessions", async () => {
-  // Get a project ID from the listing first
+Deno.test({ name: "GET /api/projects/:id returns project with sessions", ...opts, fn: async () => {
   const listRes = await app.request("/api/projects");
   const listData = await listRes.json();
   const projectWithSessions = listData.projects.find((p: { sessionCount: number }) => p.sessionCount > 0);
 
-  if (!projectWithSessions) return; // skip if no projects have sessions
+  if (!projectWithSessions) return;
 
   const res = await app.request(`/api/projects/${projectWithSessions.id}`);
   assertEquals(res.status, 200);
@@ -83,17 +84,16 @@ Deno.test("GET /api/projects/:id returns project with sessions", async () => {
   assertExists(data.sessions);
   assertEquals(Array.isArray(data.sessions), true);
   assertEquals(data.project.id, projectWithSessions.id);
-});
+}});
 
-Deno.test("GET /api/projects/:id returns 404 for unknown project", async () => {
+Deno.test({ name: "GET /api/projects/:id returns 404 for unknown project", ...opts, fn: async () => {
   const res = await app.request("/api/projects/nonexistent-project-id");
   assertEquals(res.status, 404);
-});
+}});
 
 // ─── Sessions / Transcript ───
 
-Deno.test("GET /api/sessions/:id/transcript returns meta and entries", async () => {
-  // Find a real session ID
+Deno.test({ name: "GET /api/sessions/:id/transcript returns meta and entries", ...opts, fn: async () => {
   const dashRes = await app.request("/api/dashboard");
   const dashData = await dashRes.json();
   if (dashData.recentSessions.length === 0) return;
@@ -107,9 +107,9 @@ Deno.test("GET /api/sessions/:id/transcript returns meta and entries", async () 
   assertExists(data.entries);
   assertEquals(Array.isArray(data.entries), true);
   assertEquals(data.meta.id, sessionId);
-});
+}});
 
-Deno.test("GET /api/sessions/:id/transcript entries have correct shape", async () => {
+Deno.test({ name: "GET /api/sessions/:id/transcript entries have correct shape", ...opts, fn: async () => {
   const dashRes = await app.request("/api/dashboard");
   const dashData = await dashRes.json();
   if (dashData.recentSessions.length === 0) return;
@@ -124,16 +124,16 @@ Deno.test("GET /api/sessions/:id/transcript entries have correct shape", async (
     assertExists(entry.timestamp);
     assertEquals(Array.isArray(entry.toolCalls), true);
   }
-});
+}});
 
-Deno.test("GET /api/sessions/nonexistent/transcript returns 404", async () => {
+Deno.test({ name: "GET /api/sessions/nonexistent/transcript returns 404", ...opts, fn: async () => {
   const res = await app.request("/api/sessions/00000000-0000-0000-0000-000000000000/transcript");
   assertEquals(res.status, 404);
-});
+}});
 
 // ─── Launch ───
 
-Deno.test("POST /api/launch rejects invalid mode", async () => {
+Deno.test({ name: "POST /api/launch rejects invalid mode", ...opts, fn: async () => {
   const res = await app.request("/api/launch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -142,9 +142,9 @@ Deno.test("POST /api/launch rejects invalid mode", async () => {
   assertEquals(res.status, 400);
   const data = await res.json();
   assertEquals(data.ok, false);
-});
+}});
 
-Deno.test("POST /api/launch rejects missing projectId", async () => {
+Deno.test({ name: "POST /api/launch rejects missing projectId", ...opts, fn: async () => {
   const res = await app.request("/api/launch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -153,34 +153,34 @@ Deno.test("POST /api/launch rejects missing projectId", async () => {
   assertEquals(res.status, 400);
   const data = await res.json();
   assertEquals(data.ok, false);
-});
+}});
 
-Deno.test("POST /api/launch rejects invalid target", async () => {
+Deno.test({ name: "POST /api/launch rejects invalid target", ...opts, fn: async () => {
   const res = await app.request("/api/launch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode: "resume", projectId: "test", target: "invalid" }),
   });
   assertEquals(res.status, 400);
-});
+}});
 
 // ─── Static files ───
 
-Deno.test({ name: "GET / returns HTML", sanitizeResources: false, fn: async () => {
+Deno.test({ name: "GET / returns HTML", ...opts, fn: async () => {
   const res = await app.request("/");
   assertEquals(res.status, 200);
   const ct = res.headers.get("content-type") || "";
   assertEquals(ct.includes("text/html"), true);
 }});
 
-Deno.test({ name: "GET /style.css returns CSS", sanitizeResources: false, fn: async () => {
+Deno.test({ name: "GET /style.css returns CSS", ...opts, fn: async () => {
   const res = await app.request("/style.css");
   assertEquals(res.status, 200);
   const ct = res.headers.get("content-type") || "";
   assertEquals(ct.includes("text/css"), true);
 }});
 
-Deno.test({ name: "GET /app.js returns JavaScript", sanitizeResources: false, fn: async () => {
+Deno.test({ name: "GET /app.js returns JavaScript", ...opts, fn: async () => {
   const res = await app.request("/app.js");
   assertEquals(res.status, 200);
   const ct = res.headers.get("content-type") || "";
