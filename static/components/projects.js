@@ -102,7 +102,8 @@ function ProjectGroup({ project }) {
 
   const handleContinue = (e) => {
     e.stopPropagation();
-    launchSession({ mode: "continue", projectId: project.id, projectPath: project.path, target: "terminal" })
+    const mode = project.sessionCount > 0 ? "continue" : "new";
+    launchSession({ mode, projectId: project.id, projectPath: project.path, target: "terminal" })
       .then(() => showToast("Launched in Terminal"))
       .catch((err) => showToast(err.message, "error"));
   };
