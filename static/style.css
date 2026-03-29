@@ -230,6 +230,12 @@ body {
   margin-bottom: 24px;
 }
 
+.stat-grid-compact {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .stat-card {
   background: var(--bg-secondary);
   border-radius: var(--radius-md);

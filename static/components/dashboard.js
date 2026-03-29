@@ -4,10 +4,12 @@ import { getDashboard } from "../lib/api.js";
 import { formatTokens } from "../lib/format.js";
 import { StatCard } from "./stat-card.js";
 import { SessionRow } from "./session-row.js";
+import { TranscriptPanel } from "./transcript.js";
 
 export function DashboardView() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -33,20 +35,33 @@ export function DashboardView() {
   const sessions = data.recentSessions || [];
 
   return html`
-    <div class="content">
-      <div class="stat-grid">
-        <${StatCard} label="PROJECTS" value=${stats.projects || 0} color="purple" />
-        <${StatCard} label="SESSIONS" value=${stats.sessions || 0} />
-        <${StatCard} label="ACTIVE (7D)" value=${stats.active7d || 0} color="green" />
-        <${StatCard} label="TOKENS (30D)" value=${formatTokens(stats.tokens30d || 0)} />
+    <div class="split-pane">
+      <div class="split-left">
+        <div class="stat-grid stat-grid-compact">
+          <${StatCard} label="PROJECTS" value=${stats.projects || 0} color="purple" />
+          <${StatCard} label="SESSIONS" value=${stats.sessions || 0} />
+          <${StatCard} label="ACTIVE (7D)" value=${stats.active7d || 0} color="green" />
+          <${StatCard} label="TOKENS (30D)" value=${formatTokens(stats.tokens30d || 0)} />
+        </div>
+
+        <div class="section-title">RECENT SESSIONS</div>
+
+        <div class="split-left-scroll">
+          ${sessions.map(
+            (s) => html`
+              <div
+                key=${s.id}
+                class=${`session-row-wrapper${s.id === selectedSessionId ? " selected" : ""}`}
+                onclick=${() => setSelectedSessionId(s.id)}
+              >
+                <${SessionRow} session=${s} showProject=${true} inline=${true} />
+              </div>
+            `
+          )}
+        </div>
       </div>
-
-      <div class="section-title">RECENT SESSIONS</div>
-
-      <div class="session-list">
-        ${sessions.map(
-          (s) => html`<${SessionRow} key=${s.id} session=${s} showProject=${true} />`
-        )}
+      <div class="split-right">
+        <${TranscriptPanel} sessionId=${selectedSessionId} compact=${true} />
       </div>
     </div>
   `;
