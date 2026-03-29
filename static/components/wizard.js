@@ -39,12 +39,10 @@ export function WizardView() {
   };
 
   const handleLaunch = () => {
-    // We don't have a projectId for the new project yet (it's not in ~/.claude/projects/ until a session runs)
-    // So we launch via terminal with the path directly
-    // Use "new" mode with the project path
     launchSession({
       mode: "new",
       projectId: name,
+      projectPath: result.path,
       target: "terminal",
     })
       .then(() => showToast("Launched in Terminal"))

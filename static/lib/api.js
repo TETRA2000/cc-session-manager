@@ -22,11 +22,11 @@ export async function getTranscript(sessionId) {
   return fetchJSON(`/api/sessions/${sessionId}/transcript`);
 }
 
-export async function launchSession({ mode, projectId, sessionId, prompt, target, webUrl }) {
+export async function launchSession({ mode, projectId, projectPath, sessionId, prompt, target, webUrl }) {
   const res = await fetch("/api/launch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mode, projectId, sessionId, prompt, target, webUrl }),
+    body: JSON.stringify({ mode, projectId, projectPath, sessionId, prompt, target, webUrl }),
   });
   const data = await res.json();
   if (!res.ok || !data.ok) throw new Error(data.error || "Launch failed");

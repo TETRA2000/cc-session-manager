@@ -25,8 +25,13 @@ export function launcherRoutes(config: AppConfig): Hono {
       return c.json({ ok: false, error: `Invalid target: ${target}` }, 400);
     }
 
-    // Resolve the real filesystem path from the encoded projectId
-    const projectPath = getResolvedPath(projectId);
+    // Resolve the real filesystem path:
+    // - If projectPath is provided directly (from wizard), use it
+    // - Otherwise resolve from encoded projectId (from session data)
+    let projectPath = body.projectPath;
+    if (!projectPath) {
+      projectPath = getResolvedPath(projectId);
+    }
 
     const req: LaunchRequest = {
       mode,
