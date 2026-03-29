@@ -160,7 +160,7 @@ export function TranscriptPanel({ sessionId, compact = false }) {
         <span>Messages: <span class="val">${meta.messageCount || entries.length}</span></span>
         ${meta.model && html`<span>Model: <span class="val">${meta.model}</span></span>`}
         ${meta.totalTokens > 0 && html`
-          <span>Tokens: <span class="val">${formatTokens(meta.totalTokens)}</span></span>
+          <span>Tokens: <span class="val">${formatTokens(meta.inputTokens)}${"\u2191"} ${formatTokens(meta.outputTokens)}${"\u2193"}</span></span>
         `}
         <span>Session: <span class="val">${truncate(sessionId, 8)}</span></span>
         ${meta.lastTimestamp && html`<span>Updated: <span class="val">${timeAgo(meta.lastTimestamp)}</span></span>`}

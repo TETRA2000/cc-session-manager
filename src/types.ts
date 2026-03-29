@@ -126,6 +126,8 @@ export interface SessionSummary {
   gitBranch: string | null;
   model: string | null;
   totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
   subAgentCount: number;
   lastMessage: string | null;
   webUrl: string | null;

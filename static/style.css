@@ -347,6 +347,13 @@ body {
   white-space: nowrap;
 }
 
+.session-tokens {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--orange-text, #D85A30);
+  flex-shrink: 0;
+}
+
 .session-msgs {
   width: 50px;
   flex-shrink: 0;

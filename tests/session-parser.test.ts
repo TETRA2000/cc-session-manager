@@ -49,8 +49,10 @@ Deno.test("extractSessionMetadata counts tool calls and tokens", async () => {
 
   // One tool_use block in ast-0001
   assertEquals(meta.toolCallCount, 1);
-  // Output tokens: 150 (ast-0001) + 80 (ast-0002) = 230
-  assertEquals(meta.totalTokens, 230);
+  // Total tokens: (500+150+100) + (600+80) = 1430
+  assertEquals(meta.totalTokens, 1430);
+  assertEquals(meta.inputTokens, 1200); // 500+100 + 600
+  assertEquals(meta.outputTokens, 230); // 150 + 80
 });
 
 Deno.test("extractSessionMetadata tracks timestamps", async () => {
