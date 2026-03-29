@@ -1,0 +1,142 @@
+import { html } from "htm/preact";
+import { useState, useEffect } from "preact/hooks";
+import { route, Link } from "../lib/router.js";
+import { getTranscript } from "../lib/api.js";
+import { timeAgo, formatTokens, truncate } from "../lib/format.js";
+import { ToolCall } from "./tool-call.js";
+
+function ThinkingBlock({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  const chevron = expanded ? "\u25BE" : "\u25B8";
+
+  return html`
+    <div class="thinking-block">
+      <button class="thinking-header" onclick=${() => setExpanded(!expanded)}>
+        <span>${chevron}</span>
+        <span>Thinking...</span>
+      </button>
+      ${expanded && html`<div class="thinking-body">${text}</div>`}
+    </div>
+  `;
+}
+
+function renderInlineCode(text) {
+  if (!text) return "";
+  const parts = [];
+  const regex = /`([^`]+)`/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(html`<code>${match[1]}</code>`);
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
+function Message({ entry }) {
+  const isUser = entry.type === "user";
+  const isSystem = entry.type === "system";
+  const avatarClass = isUser ? "msg-avatar user" : "msg-avatar assistant";
+  const roleClass = isUser ? "msg-role user" : "msg-role assistant";
+  const roleLabel = isUser ? "USER" : isSystem ? "SYSTEM" : "ASSISTANT";
+  const avatarLetter = isUser ? "U" : isSystem ? "S" : "C";
+
+  return html`
+    <div class="msg">
+      <div class=${avatarClass}>${avatarLetter}</div>
+      <div class="msg-body">
+        <div class=${roleClass}>${roleLabel}</div>
+        ${entry.text && html`<div class="msg-text">${renderInlineCode(entry.text)}</div>`}
+        ${entry.toolCalls && entry.toolCalls.map(
+          (tc, i) => html`<${ToolCall} key=${i} toolCall=${tc} />`
+        )}
+      </div>
+    </div>
+  `;
+}
+
+export function TranscriptView() {
+  const sessionId = route.value.params.sessionId;
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    setData(null);
+    getTranscript(sessionId)
+      .then((d) => {
+        setData(d);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, [sessionId]);
+
+  const copyId = () => {
+    navigator.clipboard.writeText(sessionId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  if (loading) {
+    return html`
+      <div class="content"><div class="loading">Loading transcript...</div></div>
+    `;
+  }
+
+  if (!data) {
+    return html`
+      <div class="content"><div class="loading">Failed to load transcript</div></div>
+    `;
+  }
+
+  const meta = data.meta || {};
+  const entries = data.entries || [];
+
+  return html`
+    <div>
+      <div class="session-bar">
+        <div class="session-breadcrumb">
+          <div class="project-icon">${"\u25C6"}</div>
+          <span class="session-bar-name">${meta.projectId || "Project"}</span>
+          <span class="session-bar-sep">/</span>
+          <span class="session-bar-summary">${meta.summary || sessionId}</span>
+        </div>
+        <div class="session-bar-actions">
+          <button class="btn-copy" onclick=${copyId}>${copied ? "Copied!" : "Copy ID"}</button>
+          <button class="btn-resume">${"\u25B6"} Resume</button>
+          <button class="btn-continue">Continue latest</button>
+        </div>
+      </div>
+
+      <div class="meta-bar">
+        ${meta.gitBranch && html`<span>Branch: <span class="meta-branch">${meta.gitBranch}</span></span>`}
+        <span>Messages: <span class="val">${meta.messageCount || entries.length}</span></span>
+        ${meta.model && html`<span>Model: <span class="val">${meta.model}</span></span>`}
+        ${meta.totalTokens > 0 && html`
+          <span>Tokens: <span class="val">${formatTokens(meta.totalTokens)}</span></span>
+        `}
+        <span>Session: <span class="val">${truncate(sessionId, 8)}</span></span>
+        ${meta.lastTimestamp && html`<span>Updated: <span class="val">${timeAgo(meta.lastTimestamp)}</span></span>`}
+      </div>
+
+      <div class="transcript">
+        ${entries.map(
+          (e, i) => html`<${Message} key=${e.uuid || i} entry=${e} />`
+        )}
+      </div>
+    </div>
+  `;
+}
