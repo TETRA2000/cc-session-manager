@@ -77,7 +77,7 @@ export async function generateSummary(
   const prompt = `Summarize this Claude Code session in one short sentence (max 80 chars). Focus on what was built, fixed, or discussed. Be specific and concise. No quotes.\n\n${conversation}`;
 
   const cmd = new Deno.Command("claude", {
-    args: ["-p", prompt, "--model", "haiku"],
+    args: ["-p", prompt, "--model", "haiku", "--no-session-persistence"],
     stdout: "piped",
     stderr: "piped",
   });
