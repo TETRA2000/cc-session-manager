@@ -127,6 +127,7 @@ export interface SessionSummary {
   model: string | null;
   totalTokens: number;
   subAgentCount: number;
+  lastMessage: string | null;
   webUrl: string | null;
   isActive: boolean;
   isRemoteConnected: boolean;

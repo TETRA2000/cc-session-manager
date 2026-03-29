@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { join } from "@std/path";
 import type { AppConfig, ProjectSummary } from "../types.ts";
 import { discoverProjects, getProjectSessions } from "../services/project-discovery.ts";
+import { attachSummaries, refreshSummaries } from "../services/summary-service.ts";
 
 /**
  * Scan $PROJECTS_ROOT for directories not yet in the discovered projects list.
@@ -61,6 +62,8 @@ export function projectRoutes(config: AppConfig): Hono {
     }
 
     const sessions = await getProjectSessions(config.claudeHome, projectId);
+    await attachSummaries(config.projectsRoot, sessions);
+    refreshSummaries(config.projectsRoot, config.claudeHome, sessions).catch(() => {});
 
     return c.json({ project, sessions });
   });

@@ -147,8 +147,8 @@ export async function refreshSummaries(
       return;
     }
 
-    log(`${stale.length} sessions need summaries, processing up to 5`);
-    const batch = stale.slice(0, 5);
+    log(`${stale.length} sessions need summaries, processing up to 50`);
+    const batch = stale.slice(0, 50);
     for (const session of batch) {
       try {
         log(`Processing ${session.id.slice(0, 8)}... (${session.messageCount} msgs, "${session.summary.slice(0, 40)}")`);

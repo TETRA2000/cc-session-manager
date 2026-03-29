@@ -73,6 +73,7 @@ export async function extractSessionMetadata(
   let lastTimestamp = "";
   let totalOutputTokens = 0;
   let foundFirstUserContent = false;
+  let lastUserMessage = "";
 
   for await (const line of readJsonlStream(filePath)) {
     // Track timestamps
@@ -137,13 +138,16 @@ export async function extractSessionMetadata(
       }
     }
 
-    // Extract summary from first non-meta user message
-    if (!foundFirstUserContent && line.type === "user" && !line.isMeta) {
+    // Extract summary from first non-meta user message, and track last user message
+    if (line.type === "user" && !line.isMeta) {
       const uMsg = line as UserMessage;
       const text = extractTextFromContent(uMsg.message.content);
       if (text) {
-        summary = text.length > 120 ? text.slice(0, 120) + "..." : text;
-        foundFirstUserContent = true;
+        if (!foundFirstUserContent) {
+          summary = text.length > 120 ? text.slice(0, 120) + "..." : text;
+          foundFirstUserContent = true;
+        }
+        lastUserMessage = text.length > 120 ? text.slice(0, 120) + "..." : text;
       }
     }
   }
@@ -161,6 +165,7 @@ export async function extractSessionMetadata(
     totalTokens: totalOutputTokens,
     subAgentCount: 0,
     webUrl,
+    lastMessage: lastUserMessage || null,
     isActive: false, // set by caller from ~/.claude/sessions/
     isRemoteConnected,
     entrypoint,

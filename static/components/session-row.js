@@ -43,7 +43,7 @@ export function SessionRow({ session, showProject = false, inline = false }) {
     <div class="session-row" onclick=${inline ? undefined : handleClick}>
       <div class="session-row-top">
         <div class=${dotClass}></div>
-        <div class="session-summary">${session.aiSummary || session.summary || session.id}</div>
+        <div class="session-summary">${session.aiSummary || session.lastMessage || session.summary || session.id}</div>
       </div>
       <div class="session-row-bottom">
         ${session.gitBranch && html`<span class="branch">${session.gitBranch}</span>`}
