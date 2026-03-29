@@ -71,10 +71,7 @@ export async function extractSessionMetadata(
   let toolCallCount = 0;
   let firstTimestamp = "";
   let lastTimestamp = "";
-  let totalInputTokens = 0;
   let totalOutputTokens = 0;
-  let totalCacheRead = 0;
-  let totalCacheCreation = 0;
   let foundFirstUserContent = false;
   let lastUserMessage = "";
 
@@ -135,13 +132,8 @@ export async function extractSessionMetadata(
           toolCallCount++;
         }
       }
-      // Sum token usage
-      const usage = aMsg.message.usage;
-      if (usage) {
-        totalInputTokens += usage.input_tokens || 0;
-        totalOutputTokens += usage.output_tokens || 0;
-        totalCacheRead += usage.cache_read_input_tokens || 0;
-        totalCacheCreation += usage.cache_creation_input_tokens || 0;
+      if (aMsg.message.usage?.output_tokens) {
+        totalOutputTokens += aMsg.message.usage.output_tokens;
       }
     }
 
@@ -169,9 +161,7 @@ export async function extractSessionMetadata(
     lastTimestamp: lastTimestamp || new Date().toISOString(),
     gitBranch,
     model,
-    totalTokens: totalInputTokens + totalOutputTokens + totalCacheCreation,
-    inputTokens: totalInputTokens + totalCacheCreation,
-    outputTokens: totalOutputTokens,
+    totalTokens: totalOutputTokens,
     subAgentCount: 0,
     webUrl,
     lastMessage: lastUserMessage || null,
