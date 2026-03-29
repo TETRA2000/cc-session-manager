@@ -131,18 +131,23 @@ function ProjectGroup({ project, onSelectSession, selectedSessionId }) {
   return html`
     <div class=${`project-group${expanded ? " expanded" : ""}`}>
       <div class="project-header" onclick=${toggle}>
-        <span class=${`project-chevron${expanded ? " open" : ""}`}>${"\u25B6"}</span>
-        <div class="project-icon">${"\u25C6"}</div>
-        <span class="project-name">
-          ${project.displayName}
-          ${settingsTags && settingsTags.map(
-            (t) => html`<span class="badge-tag" key=${t}>${t}</span>`
-          )}
-        </span>
-        <span class="project-path">${shortenPath(project.path)}</span>
-        <span class="project-count">${project.sessionCount || 0} sessions</span>
-        <button class="settings-btn" onclick=${handleSettingsClick}>${"\u2699"}</button>
-        <button class="btn-continue" onclick=${handleContinue}>${"\u25B6"} Continue</button>
+        <div class="project-header-top">
+          <span class=${`project-chevron${expanded ? " open" : ""}`}>${"\u25B6"}</span>
+          <div class="project-icon">${"\u25C6"}</div>
+          <span class="project-name">
+            ${project.displayName}
+            ${settingsTags && settingsTags.map(
+              (t) => html`<span class="badge-tag" key=${t}>${t}</span>`
+            )}
+          </span>
+        </div>
+        <div class="project-header-bottom">
+          <span class="project-path">${shortenPath(project.path)}</span>
+          <span class="project-count">${project.sessionCount || 0} sessions</span>
+          <span class="session-row-spacer"></span>
+          <button class="settings-btn" onclick=${handleSettingsClick}>${"\u2699"}</button>
+          <button class="btn-continue" onclick=${handleContinue}>${"\u25B6"} Continue</button>
+        </div>
       </div>
 
       ${showSettings && html`<${ProjectSettingsPanel} projectId=${project.id} />`}
