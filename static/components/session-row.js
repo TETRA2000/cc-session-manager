@@ -1,7 +1,7 @@
 import { html } from "htm/preact";
 import { useState } from "preact/hooks";
 import { navigate } from "../lib/router.js";
-import { timeAgo, formatTokens } from "../lib/format.js";
+import { timeAgo } from "../lib/format.js";
 import { launchSession } from "../lib/api.js";
 import { showToast } from "./toast.js";
 
@@ -51,7 +51,6 @@ export function SessionRow({ session, showProject = false, inline = false }) {
         ${isRemote && html`<span class="badge-remote">REMOTE</span>`}
         ${showProject && html`<span class="session-project">${session.projectId || ""}</span>`}
         <span class="session-row-spacer"></span>
-        ${session.totalTokens > 0 && html`<span class="session-tokens">${formatTokens(session.totalTokens)}</span>`}
         <span class="session-msgs">${session.messageCount || 0}</span>
         <span class="session-time">${timeAgo(session.lastTimestamp)}</span>
         ${isRemote
