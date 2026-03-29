@@ -35,9 +35,9 @@ export function dashboardRoutes(config: AppConfig): Hono {
 
     // Parse only the top ~30 most recent files to find 10 with actual content
     const recentSessions = [];
-    const candidates = allFiles.slice(0, 30);
+    const candidates = allFiles.slice(0, 80);
     for (const f of candidates) {
-      if (recentSessions.length >= 10) break;
+      if (recentSessions.length >= 50) break;
       try {
         const meta = await extractSessionMetadata(f.jsonlPath, f.id, f.projectId);
         meta.isActive = activeIds.has(f.id);
