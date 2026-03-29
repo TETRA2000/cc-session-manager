@@ -41,7 +41,13 @@ export function projectRoutes(config: AppConfig): Hono {
     const projects = await discoverProjects(config.claudeHome);
     const existingPaths = new Set(projects.map((p) => p.path));
     const newProjects = await discoverNewProjects(config.projectsRoot, existingPaths);
-    return c.json({ projects: [...projects, ...newProjects] });
+    const all = [...projects, ...newProjects];
+    all.sort((a, b) => {
+      if (!a.lastActivity) return 1;
+      if (!b.lastActivity) return -1;
+      return b.lastActivity.localeCompare(a.lastActivity);
+    });
+    return c.json({ projects: all });
   });
 
   // GET /projects/:projectId -> project detail with sessions
