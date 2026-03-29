@@ -51,11 +51,29 @@ export function dashboardRoutes(config: AppConfig): Hono {
     await attachSummaries(config.projectsRoot, recentSessions);
     refreshSummaries(config.projectsRoot, config.claudeHome, recentSessions).catch(() => {});
 
+    // Read token usage from stats-cache.json
+    let tokens30d = 0;
+    try {
+      const statsPath = join(config.claudeHome, "stats-cache.json");
+      const statsText = await Deno.readTextFile(statsPath);
+      const statsData = JSON.parse(statsText);
+      if (Array.isArray(statsData.dailyModelTokens)) {
+        const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        for (const day of statsData.dailyModelTokens) {
+          if (day.date >= thirtyDaysAgo && day.tokensByModel) {
+            for (const count of Object.values(day.tokensByModel)) {
+              tokens30d += count as number;
+            }
+          }
+        }
+      }
+    } catch { /* stats-cache.json not available */ }
+
     const stats: DashboardStats = {
       projects: projects.length,
       sessions: allFiles.length,
       active7d,
-      tokens30d: 0, // Deferred to Phase 4 (stats-cache.json parsing)
+      tokens30d,
     };
 
     return c.json({ stats, recentSessions });
