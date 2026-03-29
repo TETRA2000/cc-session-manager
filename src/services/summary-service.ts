@@ -3,6 +3,10 @@ import type { SessionSummary, SummaryCacheEntry, TranscriptEntry } from "../type
 import { parseTranscript } from "./session-parser.ts";
 import { findSessionFile } from "./project-discovery.ts";
 
+function log(...args: unknown[]) {
+  console.log("[summary]", ...args);
+}
+
 // ─── Cache management ───
 
 let cacheInMemory: Record<string, SummaryCacheEntry> | null = null;
@@ -15,8 +19,10 @@ export async function loadSummaryCache(
     const path = join(projectsRoot, ".session-manager", "summaries.json");
     const text = await Deno.readTextFile(path);
     cacheInMemory = JSON.parse(text);
+    log(`Cache loaded: ${Object.keys(cacheInMemory!).length} entries`);
     return cacheInMemory!;
   } catch {
+    log("No cache file found, starting fresh");
     cacheInMemory = {};
     return cacheInMemory;
   }
@@ -34,8 +40,9 @@ async function saveSummaryCache(
       join(dir, "summaries.json"),
       JSON.stringify(cache, null, 2) + "\n",
     );
+    log(`Cache saved: ${Object.keys(cache).length} entries`);
   } catch (err) {
-    console.warn("Failed to save summary cache:", err);
+    log("ERROR saving cache:", err);
   }
 }
 
@@ -46,7 +53,6 @@ export function getCachedSummary(
 ): string | null {
   const entry = cache[sessionId];
   if (!entry) return null;
-  // Cache is valid if message count hasn't changed
   if (entry.messageCount === currentMessageCount) return entry.aiSummary;
   return null;
 }
@@ -76,20 +82,27 @@ export async function generateSummary(
   const conversation = formatMessagesForPrompt(entries);
   const prompt = `Summarize this Claude Code session in one short sentence (max 80 chars). Focus on what was built, fixed, or discussed. Be specific and concise. No quotes.\n\n${conversation}`;
 
+  log(`Calling claude -p (${conversation.length} chars context, ${entries.length} entries)`);
+  const startMs = Date.now();
+
   const cmd = new Deno.Command("claude", {
     args: ["-p", prompt, "--model", "haiku", "--no-session-persistence", "--tools", ""],
     stdout: "piped",
     stderr: "piped",
   });
   const output = await cmd.output();
+  const elapsed = Date.now() - startMs;
 
   if (!output.success) {
     const stderr = new TextDecoder().decode(output.stderr);
+    log(`ERROR claude -p failed (${elapsed}ms):`, stderr.slice(0, 200));
     throw new Error(`claude -p failed: ${stderr}`);
   }
 
   const text = new TextDecoder().decode(output.stdout).trim();
-  return text.slice(0, 100);
+  const result = text.slice(0, 100);
+  log(`Generated (${elapsed}ms): "${result}"`);
+  return result;
 }
 
 // ─── Background refresh ───
@@ -101,7 +114,10 @@ export async function refreshSummaries(
   claudeHome: string,
   sessions: SessionSummary[],
 ): Promise<void> {
-  if (refreshInProgress) return;
+  if (refreshInProgress) {
+    log("Refresh already in progress, skipping");
+    return;
+  }
 
   refreshInProgress = true;
   try {
@@ -110,18 +126,29 @@ export async function refreshSummaries(
       (s) => getCachedSummary(cache, s.id, s.messageCount) === null && s.messageCount > 0,
     );
 
-    if (stale.length === 0) return;
+    if (stale.length === 0) {
+      log("All summaries up to date");
+      return;
+    }
 
-    // Process up to 5 at a time
+    log(`${stale.length} sessions need summaries, processing up to 5`);
     const batch = stale.slice(0, 5);
     for (const session of batch) {
       try {
+        log(`Processing ${session.id.slice(0, 8)}... (${session.messageCount} msgs, "${session.summary.slice(0, 40)}")`);
         const found = await findSessionFile(claudeHome, session.id);
-        if (!found) continue;
+        if (!found) {
+          log(`  Session file not found, skipping`);
+          continue;
+        }
 
         const entries = await parseTranscript(found.filePath);
-        if (entries.length === 0) continue;
+        if (entries.length === 0) {
+          log(`  No transcript entries, skipping`);
+          continue;
+        }
 
+        log(`  Parsed ${entries.length} transcript entries, generating summary...`);
         const aiSummary = await generateSummary(entries);
         if (aiSummary) {
           cache[session.id] = {
@@ -129,9 +156,10 @@ export async function refreshSummaries(
             messageCount: session.messageCount,
             generatedAt: new Date().toISOString(),
           };
+          log(`  Cached: "${aiSummary}"`);
         }
       } catch (err) {
-        console.warn(`Failed to generate summary for ${session.id}:`, err);
+        log(`  ERROR for ${session.id.slice(0, 8)}:`, err);
       }
     }
 
@@ -148,10 +176,13 @@ export async function attachSummaries(
   sessions: SessionSummary[],
 ): Promise<void> {
   const cache = await loadSummaryCache(projectsRoot);
+  let attached = 0;
   for (const session of sessions) {
     const cached = getCachedSummary(cache, session.id, session.messageCount);
     if (cached) {
       session.aiSummary = cached;
+      attached++;
     }
   }
+  log(`Attached ${attached}/${sessions.length} cached summaries`);
 }
