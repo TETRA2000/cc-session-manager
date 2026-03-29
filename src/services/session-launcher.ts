@@ -1,10 +1,10 @@
 import type { LaunchRequest, LaunchResult } from "../types.ts";
 
-function escapeForShell(s: string): string {
+export function escapeForShell(s: string): string {
   return "'" + s.replace(/'/g, "'\\''") + "'";
 }
 
-function escapeForAppleScript(s: string): string {
+export function escapeForAppleScript(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 

@@ -12,11 +12,11 @@ Deno.test("readJsonlStream yields parsed lines and skips malformed", async () =>
   for await (const line of readJsonlStream(FIXTURE_PATH)) {
     lines.push(line);
   }
-  // Fixture has 8 valid JSON lines + 1 malformed line
-  assertEquals(lines.length, 8);
+  // Fixture has 10 valid JSON lines + 1 malformed line
+  assertEquals(lines.length, 10);
   assertEquals(lines[0].type, "file-history-snapshot");
   assertEquals(lines[1].type, "user");
-  assertEquals(lines[7].type, "progress");
+  assertEquals(lines[9].type, "progress");
 });
 
 Deno.test("extractSessionMetadata returns correct summary", async () => {
@@ -33,13 +33,15 @@ Deno.test("extractSessionMetadata counts messages correctly (excludes meta and n
   const meta = await extractSessionMetadata(FIXTURE_PATH, "session-abc-123", "test-project");
 
   // Displayable non-meta messages:
-  // - usr-0002 (user, not meta) -> 1
+  // - usr-0002 (user) -> 1
   // - ast-0001 (assistant) -> 2
-  // - usr-0003 (user, tool_result content) -> 3
+  // - usr-0003 (user, tool_result) -> 3
   // - ast-0002 (assistant) -> 4
   // - sys-0001 (system) -> 5
+  // - bridge-0001 (system, bridge_status) -> 6
+  // - bridge-0002 (system, bridge_status) -> 7
   // Excluded: file-history-snapshot, usr-0001 (isMeta), progress
-  assertEquals(meta.messageCount, 5);
+  assertEquals(meta.messageCount, 7);
 });
 
 Deno.test("extractSessionMetadata counts tool calls and tokens", async () => {
@@ -125,6 +127,37 @@ Deno.test("parseTranscript handles system messages", async () => {
   const entries = await parseTranscript(FIXTURE_PATH);
 
   const systemEntries = entries.filter((e) => e.type === "system");
-  assertEquals(systemEntries.length, 1);
+  // sys-0001 + bridge-0001 + bridge-0002 = 3 system entries
+  assertEquals(systemEntries.length, 3);
   assertEquals(systemEntries[0].text, "Session paused");
+});
+
+// ─── Web URL / bridge_status extraction ───
+
+Deno.test("extractSessionMetadata extracts webUrl from bridge_status", async () => {
+  const meta = await extractSessionMetadata(FIXTURE_PATH, "session-abc-123", "test-project");
+  assertEquals(meta.webUrl, "https://claude.ai/code/session_01TEST");
+});
+
+Deno.test("extractSessionMetadata tracks remote disconnect (bridge_status without url)", async () => {
+  const meta = await extractSessionMetadata(FIXTURE_PATH, "session-abc-123", "test-project");
+  // bridge-0001 connects, bridge-0002 disconnects → isRemoteConnected should be false
+  assertEquals(meta.isRemoteConnected, false);
+});
+
+Deno.test("extractSessionMetadata extracts entrypoint", async () => {
+  const meta = await extractSessionMetadata(FIXTURE_PATH, "session-abc-123", "test-project");
+  // No entrypoint in fixture messages, so null
+  assertEquals(meta.entrypoint, null);
+});
+
+Deno.test("extractSessionMetadata initializes isActive as false", async () => {
+  const meta = await extractSessionMetadata(FIXTURE_PATH, "session-abc-123", "test-project");
+  assertEquals(meta.isActive, false);
+});
+
+Deno.test("extractSessionMetadata strips command tags from summary", async () => {
+  const fixturePath = new URL("./fixtures/command-session.jsonl", import.meta.url).pathname;
+  const meta = await extractSessionMetadata(fixturePath, "test-id", "test-proj");
+  assertEquals(meta.summary, "kiro:spec-init");
 });

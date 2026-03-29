@@ -5,5 +5,7 @@
 {"type":"user","uuid":"usr-0003","parentUuid":"ast-0001","timestamp":"2026-03-28T10:00:06.000Z","sessionId":"session-abc-123","message":{"role":"user","content":[{"type":"tool_result","content":"File written successfully","tool_use_id":"tu-0001"}]}}
 {"type":"assistant","uuid":"ast-0002","parentUuid":"usr-0003","timestamp":"2026-03-28T10:00:10.000Z","sessionId":"session-abc-123","message":{"model":"claude-sonnet-4-20250514","id":"msg-ast-0002","role":"assistant","content":[{"type":"text","text":"I've created the login page with email and password fields. The component is at src/login.tsx."}],"stop_reason":"end_turn","usage":{"input_tokens":600,"output_tokens":80}}}
 {"type":"system","uuid":"sys-0001","parentUuid":"ast-0002","timestamp":"2026-03-28T10:00:11.000Z","sessionId":"session-abc-123","subtype":"info","content":"Session paused","level":"info"}
+{"type":"system","uuid":"bridge-0001","parentUuid":null,"timestamp":"2026-03-28T10:00:11.500Z","sessionId":"session-abc-123","subtype":"bridge_status","content":"/remote-control is active. Code in CLI or at https://claude.ai/code/session_01TEST","url":"https://claude.ai/code/session_01TEST","isMeta":false}
+{"type":"system","uuid":"bridge-0002","parentUuid":null,"timestamp":"2026-03-28T10:00:11.800Z","sessionId":"session-abc-123","subtype":"bridge_status","isMeta":false}
 {"type":"progress","uuid":"prg-0001","parentUuid":null,"timestamp":"2026-03-28T10:00:12.000Z","data":{"type":"hook","hookEvent":"pre-commit","hookName":"lint"}}
 this is a malformed line that is not valid JSON
