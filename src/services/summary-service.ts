@@ -60,9 +60,10 @@ export function getCachedSummary(
 // ─── Summary generation ───
 
 function formatMessagesForPrompt(entries: TranscriptEntry[]): string {
-  const relevant = entries
-    .filter((e) => e.type === "user" || e.type === "assistant")
-    .slice(0, 10);
+  const userAndAssistant = entries
+    .filter((e) => e.type === "user" || e.type === "assistant");
+  // Use the most recent messages — they best represent what the session is about
+  const relevant = userAndAssistant.slice(-10);
 
   return relevant
     .map((e) => {
