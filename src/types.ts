@@ -127,6 +127,7 @@ export interface SessionSummary {
   model: string | null;
   totalTokens: number;
   subAgentCount: number;
+  webUrl: string | null;
 }
 
 export interface TranscriptEntry {
@@ -191,4 +192,23 @@ export interface DailyActivity {
 export interface AppConfig {
   claudeHome: string;
   port: number;
+}
+
+// ─── Launcher types ───
+
+export type LaunchTarget = "terminal" | "web";
+
+export interface LaunchRequest {
+  mode: "resume" | "continue" | "new";
+  projectId: string;
+  projectPath: string;
+  sessionId?: string;
+  prompt?: string;
+  target: LaunchTarget;
+  webUrl?: string;
+}
+
+export interface LaunchResult {
+  ok: boolean;
+  error?: string;
 }

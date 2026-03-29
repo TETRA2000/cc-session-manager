@@ -1,8 +1,9 @@
 import { html } from "htm/preact";
 import { useState, useEffect } from "preact/hooks";
-import { getProjects, getProject } from "../lib/api.js";
+import { getProjects, getProject, launchSession } from "../lib/api.js";
 import { shortenPath } from "../lib/format.js";
 import { SessionRow } from "./session-row.js";
+import { showToast } from "./toast.js";
 
 function ProjectGroup({ project }) {
   const [expanded, setExpanded] = useState(false);
@@ -28,6 +29,9 @@ function ProjectGroup({ project }) {
 
   const handleContinue = (e) => {
     e.stopPropagation();
+    launchSession({ mode: "continue", projectId: project.id, target: "terminal" })
+      .then(() => showToast("Launched in Terminal"))
+      .catch((err) => showToast(err.message, "error"));
   };
 
   return html`

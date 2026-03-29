@@ -5,6 +5,7 @@ import { Header } from "./components/header.js";
 import { DashboardView } from "./components/dashboard.js";
 import { ProjectsView } from "./components/projects.js";
 import { TranscriptView } from "./components/transcript.js";
+import { Toast } from "./components/toast.js";
 
 function App() {
   const currentRoute = route.value;
@@ -28,6 +29,7 @@ function App() {
       <${Header} />
       ${view}
     </div>
+    <${Toast} />
   `;
 }
 

@@ -114,6 +114,49 @@ Returns the full parsed transcript for a session. Searches across all projects t
 }
 ```
 
+## POST /api/launch
+
+Launch a Claude Code session in Terminal or browser.
+
+**Request body:**
+
+```json
+{
+  "mode": "resume",
+  "projectId": "-Users-takahiko-repo-my-app",
+  "sessionId": "c0855413-6e78-489f-abee-d755d354fdf0",
+  "target": "terminal",
+  "webUrl": "https://claude.ai/code/session_01X7qWxEnMVNeoTvhehACRWZ"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `mode` | `"resume"` \| `"continue"` \| `"new"` | Yes | Launch mode |
+| `projectId` | string | Yes | Encoded project directory name |
+| `sessionId` | string | For resume | Session UUID to resume |
+| `target` | `"terminal"` \| `"web"` | No (default: `"terminal"`) | Where to launch |
+| `prompt` | string | No | Initial prompt for "new" mode |
+| `webUrl` | string | No | Web session URL for "web" target |
+
+**Response:**
+
+```json
+{ "ok": true }
+```
+
+**Error response:**
+
+```json
+{ "ok": false, "error": "Project path not found: /invalid/path" }
+```
+
+**Target behavior:**
+- `terminal`: Opens Terminal.app via osascript with `cd <path> && claude --resume <id>`
+- `web`: Opens `webUrl` in default browser (falls back to `https://claude.ai/code` if no URL provided)
+
+---
+
 ## Type Definitions
 
 ### ProjectSummary
@@ -142,6 +185,7 @@ Returns the full parsed transcript for a session. Searches across all projects t
 | `model` | string \| null | Primary model used |
 | `totalTokens` | number | Sum of output tokens |
 | `subAgentCount` | number | Number of sub-agent sessions |
+| `webUrl` | string \| null | Claude Code web session URL (from `/remote-control`) |
 
 ### TranscriptEntry
 

@@ -3,6 +3,7 @@ import type {
   ContentBlock,
   JournalLine,
   SessionSummary,
+  SystemMessage,
   TextBlock,
   ToolCallEntry,
   ToolResultBlock,
@@ -63,6 +64,7 @@ export async function extractSessionMetadata(
   let gitBranch: string | null = null;
   let model: string | null = null;
   let cwd: string | null = null;
+  let webUrl: string | null = null;
   let messageCount = 0;
   let toolCallCount = 0;
   let firstTimestamp = "";
@@ -83,6 +85,18 @@ export async function extractSessionMetadata(
     }
     if (!cwd && line.cwd) {
       cwd = line.cwd;
+    }
+
+    // Extract web URL from bridge_status system messages
+    if (!webUrl && line.type === "system") {
+      const sMsg = line as SystemMessage;
+      if (sMsg.subtype === "bridge_status") {
+        // The url field is on the raw JSON object, not typed in SystemMessage
+        const rawLine = line as unknown as Record<string, unknown>;
+        if (typeof rawLine.url === "string") {
+          webUrl = rawLine.url;
+        }
+      }
     }
 
     // Extract model from first assistant message
@@ -135,6 +149,7 @@ export async function extractSessionMetadata(
     model,
     totalTokens: totalOutputTokens,
     subAgentCount: 0,
+    webUrl,
   };
 }
 

@@ -676,4 +676,127 @@ body {
   .project-header:hover { filter: brightness(1.1); }
 
   .tool-call-header:hover { filter: brightness(1.1); }
+
+  .toast-error {
+    background: rgba(197, 48, 48, 0.15);
+    color: #FCA5A5;
+    border-color: rgba(252, 165, 165, 0.3);
+  }
+  .badge-web {
+    background: var(--purple-fill);
+    color: var(--purple-text);
+    border-color: rgba(175, 169, 236, 0.3);
+  }
+}
+
+/* ─── Toast Notifications ─── */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: toast-in 0.2s ease-out;
+}
+
+.toast-success {
+  background: var(--green-fill, #E1F5EE);
+  color: var(--green-text, #0F6E56);
+  border: 1px solid var(--green-border, #9FE1CB);
+}
+
+.toast-error {
+  background: #FDE8E8;
+  color: #C53030;
+  border: 1px solid #FCA5A5;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Web Badge ─── */
+
+.badge-web {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  background: var(--purple-fill, #EEEDFE);
+  color: var(--purple-text, #534AB7);
+  border: 1px solid rgba(127, 119, 221, 0.3);
+  margin-left: 6px;
+}
+
+/* ─── Launch Dropdown ─── */
+
+.launch-group {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.launch-group .btn-resume,
+.launch-group .btn-continue {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.launch-dropdown-toggle {
+  padding: 3px 5px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.launch-dropdown-toggle:hover {
+  background: var(--bg-primary);
+}
+
+.launch-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  min-width: 140px;
+  overflow: hidden;
+}
+
+.launch-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.launch-menu-item:hover {
+  background: var(--bg-secondary);
 }

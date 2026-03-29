@@ -1,8 +1,9 @@
 import { html } from "htm/preact";
 import { useState, useEffect } from "preact/hooks";
 import { route, Link } from "../lib/router.js";
-import { getTranscript } from "../lib/api.js";
+import { getTranscript, launchSession } from "../lib/api.js";
 import { timeAgo, formatTokens, truncate } from "../lib/format.js";
+import { showToast } from "./toast.js";
 import { ToolCall } from "./tool-call.js";
 
 function ThinkingBlock({ text }) {
@@ -105,6 +106,25 @@ export function TranscriptView() {
   const meta = data.meta || {};
   const entries = data.entries || [];
 
+  const handleResume = () => {
+    launchSession({ mode: "resume", projectId: meta.projectId, sessionId, target: "terminal" })
+      .then(() => showToast("Launched in Terminal"))
+      .catch((err) => showToast(err.message, "error"));
+  };
+
+  const handleContinue = () => {
+    launchSession({ mode: "continue", projectId: meta.projectId, target: "terminal" })
+      .then(() => showToast("Launched in Terminal"))
+      .catch((err) => showToast(err.message, "error"));
+  };
+
+  const handleWebOpen = () => {
+    const url = meta.webUrl || "https://claude.ai/code";
+    launchSession({ mode: "resume", projectId: meta.projectId, sessionId, target: "web", webUrl: url })
+      .then(() => showToast("Opened in browser"))
+      .catch((err) => showToast(err.message, "error"));
+  };
+
   return html`
     <div>
       <div class="session-bar">
@@ -116,8 +136,9 @@ export function TranscriptView() {
         </div>
         <div class="session-bar-actions">
           <button class="btn-copy" onclick=${copyId}>${copied ? "Copied!" : "Copy ID"}</button>
-          <button class="btn-resume">${"\u25B6"} Resume</button>
-          <button class="btn-continue">Continue latest</button>
+          <button class="btn-resume" onclick=${handleResume}>${"\u25B6"} Resume</button>
+          <button class="btn-continue" onclick=${handleContinue}>Continue latest</button>
+          ${meta.webUrl && html`<button class="btn-resume" onclick=${handleWebOpen}>Open in Web</button>`}
         </div>
       </div>
 
