@@ -80,7 +80,17 @@ export async function generateSummary(
   entries: TranscriptEntry[],
 ): Promise<string> {
   const conversation = formatMessagesForPrompt(entries);
-  const prompt = `Summarize this Claude Code session in one short sentence (max 80 chars). Focus on what was built, fixed, or discussed. Be specific and concise. No quotes.\n\n${conversation}`;
+  const prompt = `You are a summarizer. Below is a log of a coding session. Output ONLY a single short sentence (max 80 chars) describing what was done. No markdown, no bullets, no questions. Just one plain sentence.
+
+Examples of good summaries:
+- Built session manager GUI with project wizard and launcher
+- Fixed authentication bug in login flow
+- Added dark mode support and responsive layout
+
+SESSION LOG:
+${conversation}
+
+SUMMARY:`;
 
   log(`Calling claude -p (${prompt.length} chars prompt, ${entries.length} entries)`);
   const startMs = Date.now();
