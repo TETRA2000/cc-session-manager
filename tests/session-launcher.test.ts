@@ -74,27 +74,6 @@ Deno.test("launchSession returns error for invalid project path", async () => {
   assertEquals(result.error!.startsWith("Project path not found:"), true);
 });
 
-Deno.test("launchSession web target uses webUrl when provided", async () => {
-  // Can't fully test browser launch, but can verify it doesn't error on the request shape
-  // This will actually try to open a browser, so we test the validation path instead
-  const result = await launchSession({
-    mode: "resume",
-    projectId: "test",
-    projectPath: "/tmp",
-    target: "web",
-    webUrl: "https://claude.ai/code/session_01TEST",
-  });
-  // On CI this may fail (no browser), but the function should not throw
-  assertEquals(typeof result.ok, "boolean");
-});
-
-Deno.test("launchSession web target falls back to claude.ai/code", async () => {
-  const result = await launchSession({
-    mode: "continue",
-    projectId: "test",
-    projectPath: "/tmp",
-    target: "web",
-    // no webUrl
-  });
-  assertEquals(typeof result.ok, "boolean");
-});
+// NOTE: Tests that actually invoke osascript/open (terminal/web launch) are
+// excluded because they require --allow-run and open real applications.
+// Those are covered by manual verification via `deno task dev`.
