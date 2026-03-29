@@ -82,15 +82,20 @@ export async function generateSummary(
   const conversation = formatMessagesForPrompt(entries);
   const prompt = `Summarize this Claude Code session in one short sentence (max 80 chars). Focus on what was built, fixed, or discussed. Be specific and concise. No quotes.\n\n${conversation}`;
 
-  log(`Calling claude -p (${conversation.length} chars context, ${entries.length} entries)`);
+  log(`Calling claude -p (${prompt.length} chars prompt, ${entries.length} entries)`);
   const startMs = Date.now();
 
   const cmd = new Deno.Command("claude", {
-    args: ["-p", prompt, "--model", "haiku", "--no-session-persistence", "--tools", ""],
+    args: ["-p", "--model", "haiku", "--no-session-persistence", "--tools", ""],
+    stdin: "piped",
     stdout: "piped",
     stderr: "piped",
   });
-  const output = await cmd.output();
+  const child = cmd.spawn();
+  const writer = child.stdin.getWriter();
+  await writer.write(new TextEncoder().encode(prompt));
+  await writer.close();
+  const output = await child.output();
   const elapsed = Date.now() - startMs;
 
   if (!output.success) {
