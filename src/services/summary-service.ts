@@ -1,5 +1,4 @@
 import { join } from "@std/path";
-import Anthropic from "@anthropic-ai/sdk";
 import type { SessionSummary, SummaryCacheEntry, TranscriptEntry } from "../types.ts";
 import { parseTranscript } from "./session-parser.ts";
 import { findSessionFile } from "./project-discovery.ts";
@@ -74,27 +73,23 @@ function formatMessagesForPrompt(entries: TranscriptEntry[]): string {
 export async function generateSummary(
   entries: TranscriptEntry[],
 ): Promise<string> {
-  const client = new Anthropic();
   const conversation = formatMessagesForPrompt(entries);
+  const prompt = `Summarize this Claude Code session in one short sentence (max 80 chars). Focus on what was built, fixed, or discussed. Be specific and concise. No quotes.\n\n${conversation}`;
 
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 100,
-    messages: [
-      {
-        role: "user",
-        content: `Summarize this Claude Code session in one short sentence (max 80 chars). Focus on what was built, fixed, or discussed. Be specific and concise. No quotes.
-
-${conversation}`,
-      },
-    ],
+  const cmd = new Deno.Command("claude", {
+    args: ["-p", prompt, "--model", "haiku"],
+    stdout: "piped",
+    stderr: "piped",
   });
+  const output = await cmd.output();
 
-  const text = response.content[0];
-  if (text.type === "text") {
-    return text.text.trim().slice(0, 100);
+  if (!output.success) {
+    const stderr = new TextDecoder().decode(output.stderr);
+    throw new Error(`claude -p failed: ${stderr}`);
   }
-  return "";
+
+  const text = new TextDecoder().decode(output.stdout).trim();
+  return text.slice(0, 100);
 }
 
 // ─── Background refresh ───

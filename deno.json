@@ -10,12 +10,11 @@
     "@std/path": "jsr:@std/path@^1",
     "@std/streams": "jsr:@std/streams@^1",
     "@std/cli": "jsr:@std/cli@^1",
-    "@std/assert": "jsr:@std/assert@^1",
-    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk"
+    "@std/assert": "jsr:@std/assert@^1"
   },
   "tasks": {
-    "dev": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --watch --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-net=127.0.0.1:3456,api.anthropic.com --allow-env=HOME,PROJECTS_ROOT,ANTHROPIC_API_KEY --allow-run=osascript,open,git --deny-write=$HOME/.claude main.ts'",
-    "start": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-run=claude,git,osascript,open --allow-net=127.0.0.1:3456,api.anthropic.com --allow-env=HOME,PROJECTS_ROOT,ANTHROPIC_API_KEY --deny-write=$HOME/.claude main.ts'",
+    "dev": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --watch --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --allow-run=claude,osascript,open,git --deny-write=$HOME/.claude main.ts'",
+    "start": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-run=claude,git,osascript,open --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --deny-write=$HOME/.claude main.ts'",
     "check": "deno check main.ts",
     "test": "deno test --allow-read=$HOME/.claude,.,/var/folders --allow-env=HOME --allow-write=/var/folders --allow-run=git tests/"
   },
