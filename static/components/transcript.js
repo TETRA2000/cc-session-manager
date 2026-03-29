@@ -1,6 +1,6 @@
 import { html } from "htm/preact";
 import { useState, useEffect } from "preact/hooks";
-import { route, Link } from "../lib/router.js";
+import { route } from "../lib/router.js";
 import { getTranscript, launchSession } from "../lib/api.js";
 import { timeAgo, formatTokens, truncate } from "../lib/format.js";
 import { showToast } from "./toast.js";
@@ -65,13 +65,18 @@ function Message({ entry }) {
   `;
 }
 
-export function TranscriptView() {
-  const sessionId = route.value.params.sessionId;
+/**
+ * Reusable transcript panel. Used both standalone (#/transcript/:id) and inline (projects 2-pane).
+ * @param {string} sessionId - Session to load
+ * @param {boolean} compact - If true, uses compact header for inline mode
+ */
+export function TranscriptPanel({ sessionId, compact = false }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!sessionId) return;
     setLoading(true);
     setData(null);
     getTranscript(sessionId)
@@ -91,16 +96,16 @@ export function TranscriptView() {
     });
   };
 
+  if (!sessionId) {
+    return html`<div class="transcript-empty">Select a session to view transcript</div>`;
+  }
+
   if (loading) {
-    return html`
-      <div class="content"><div class="loading">Loading transcript...</div></div>
-    `;
+    return html`<div class="transcript-empty">Loading transcript...</div>`;
   }
 
   if (!data) {
-    return html`
-      <div class="content"><div class="loading">Failed to load transcript</div></div>
-    `;
+    return html`<div class="transcript-empty">Failed to load transcript</div>`;
   }
 
   const meta = data.meta || {};
@@ -126,13 +131,13 @@ export function TranscriptView() {
   };
 
   return html`
-    <div>
-      <div class="session-bar">
+    <div class=${compact ? "transcript-panel" : ""}>
+      <div class="session-bar ${compact ? "session-bar-compact" : ""}">
         <div class="session-breadcrumb">
           <div class="project-icon">${"\u25C6"}</div>
           <span class="session-bar-name">${meta.projectId || "Project"}</span>
           <span class="session-bar-sep">/</span>
-          <span class="session-bar-summary">${meta.summary || sessionId}</span>
+          <span class="session-bar-summary">${meta.aiSummary || meta.summary || sessionId}</span>
         </div>
         <div class="session-bar-actions">
           <button class="btn-copy" onclick=${copyId}>${copied ? "Copied!" : "Copy ID"}</button>
@@ -160,4 +165,10 @@ export function TranscriptView() {
       </div>
     </div>
   `;
+}
+
+/** Standalone transcript view (used at #/transcript/:id) */
+export function TranscriptView() {
+  const sessionId = route.value.params.sessionId;
+  return html`<${TranscriptPanel} sessionId=${sessionId} />`;
 }

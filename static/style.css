@@ -618,7 +618,103 @@ body {
 }
 
 /* ==========================================================================
-   10. Wizard Form
+   10. Split Pane (Projects 2-pane layout)
+   ========================================================================== */
+
+.split-pane {
+  display: flex;
+  gap: 0;
+  height: calc(100vh - 80px);
+  margin: -24px;
+  margin-top: 0;
+}
+
+.split-left {
+  width: 420px;
+  min-width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-tertiary);
+  padding: 16px;
+  overflow: hidden;
+}
+
+.split-left-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.split-right {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.transcript-panel {
+  padding: 0 16px 16px 16px;
+}
+
+.transcript-panel .session-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-secondary);
+  padding-top: 12px;
+}
+
+.transcript-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.session-row-wrapper {
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.session-row-wrapper:hover {
+  background: rgba(127, 119, 221, 0.04);
+}
+
+.session-row-wrapper.selected {
+  background: rgba(127, 119, 221, 0.08);
+}
+
+.session-row-wrapper .session-row {
+  cursor: pointer;
+}
+
+.session-bar-compact {
+  padding: 8px 0;
+}
+
+@media (max-width: 960px) {
+  .split-pane {
+    flex-direction: column;
+    height: auto;
+    margin: 0;
+  }
+
+  .split-left {
+    width: 100%;
+    max-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border-tertiary);
+  }
+
+  .split-right {
+    min-height: 300px;
+  }
+}
+
+/* ==========================================================================
+   11. Wizard Form
    ========================================================================== */
 
 .wizard-title {
@@ -723,7 +819,7 @@ body {
 }
 
 /* ==========================================================================
-   11. Project Settings Panel
+   12. Project Settings Panel
    ========================================================================== */
 
 .project-settings {
@@ -797,7 +893,7 @@ body {
 }
 
 /* ==========================================================================
-   12. Responsive
+   13. Responsive
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -810,7 +906,7 @@ body {
 }
 
 /* ==========================================================================
-   13. Dark mode
+   14. Dark mode
    ========================================================================== */
 
 @media (prefers-color-scheme: dark) {

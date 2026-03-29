@@ -3,6 +3,7 @@ import { useState, useEffect } from "preact/hooks";
 import { getProjects, getProject, launchSession, getProjectSettings, updateProjectSettings } from "../lib/api.js";
 import { shortenPath } from "../lib/format.js";
 import { SessionRow } from "./session-row.js";
+import { TranscriptPanel } from "./transcript.js";
 import { showToast } from "./toast.js";
 
 function ProjectSettingsPanel({ projectId }) {
@@ -76,7 +77,7 @@ function ProjectSettingsPanel({ projectId }) {
   `;
 }
 
-function ProjectGroup({ project }) {
+function ProjectGroup({ project, onSelectSession, selectedSessionId }) {
   const [expanded, setExpanded] = useState(false);
   const [sessions, setSessions] = useState(null);
   const [loadingSessions, setLoadingSessions] = useState(false);
@@ -123,6 +124,10 @@ function ProjectGroup({ project }) {
     }
   };
 
+  const handleSessionClick = (session) => {
+    onSelectSession(session.id);
+  };
+
   return html`
     <div class=${`project-group${expanded ? " expanded" : ""}`}>
       <div class="project-header" onclick=${toggle}>
@@ -146,7 +151,15 @@ function ProjectGroup({ project }) {
         <div class="project-sessions">
           ${loadingSessions && html`<div class="loading">Loading...</div>`}
           ${sessions && sessions.map(
-            (s) => html`<${SessionRow} key=${s.id} session=${s} />`
+            (s) => html`
+              <div
+                key=${s.id}
+                class=${`session-row-wrapper${s.id === selectedSessionId ? " selected" : ""}`}
+                onclick=${() => handleSessionClick(s)}
+              >
+                <${SessionRow} session=${s} inline=${true} />
+              </div>
+            `
           )}
         </div>
       `}
@@ -158,6 +171,7 @@ export function ProjectsView() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -186,19 +200,31 @@ export function ProjectsView() {
     : projects;
 
   return html`
-    <div class="content">
-      <div style="margin-bottom: 16px;">
-        <input
-          class="search-box"
-          type="text"
-          placeholder="Filter projects..."
-          value=${filter}
-          oninput=${(e) => setFilter(e.target.value)}
-        />
+    <div class="split-pane">
+      <div class="split-left">
+        <div style="padding: 0 0 12px 0;">
+          <input
+            class="search-box"
+            type="text"
+            placeholder="Filter projects..."
+            value=${filter}
+            oninput=${(e) => setFilter(e.target.value)}
+          />
+        </div>
+        <div class="split-left-scroll">
+          ${filtered.map(
+            (p) => html`<${ProjectGroup}
+              key=${p.id}
+              project=${p}
+              onSelectSession=${setSelectedSessionId}
+              selectedSessionId=${selectedSessionId}
+            />`
+          )}
+        </div>
       </div>
-      ${filtered.map(
-        (p) => html`<${ProjectGroup} key=${p.id} project=${p} />`
-      )}
+      <div class="split-right">
+        <${TranscriptPanel} sessionId=${selectedSessionId} compact=${true} />
+      </div>
     </div>
   `;
 }

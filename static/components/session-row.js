@@ -5,7 +5,7 @@ import { timeAgo } from "../lib/format.js";
 import { launchSession } from "../lib/api.js";
 import { showToast } from "./toast.js";
 
-export function SessionRow({ session, showProject = false }) {
+export function SessionRow({ session, showProject = false, inline = false }) {
   const isActive = session.isActive || false;
   const dotClass = isActive ? "dot purple" : "dot muted";
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,7 +40,7 @@ export function SessionRow({ session, showProject = false }) {
   const isRemote = !!session.isRemoteConnected;
 
   return html`
-    <div class="session-row" onclick=${handleClick}>
+    <div class="session-row" onclick=${inline ? undefined : handleClick}>
       <div class=${dotClass}></div>
       <div class="session-summary">${session.aiSummary || session.summary || session.id}</div>
       ${session.gitBranch && html`<span class="branch">${session.gitBranch}</span>`}
