@@ -23,8 +23,10 @@ Opens http://127.0.0.1:3456 with three views:
 - Streams large JSONL session files without loading fully into memory
 - Pairs tool calls with their results for clean transcript display
 - **Launch sessions** from the GUI — Resume or Continue in Terminal.app
-- **Open in Web** — sessions with remote-control history link directly to `claude.ai/code`
-- WEB badge on sessions that have been used with `/remote-control`
+- **Open in Web** — sessions with active remote-control link directly to `claude.ai/code`
+- **New Project Wizard** — create directory, git init, CLAUDE.md/.mcp.json templates
+- **Per-project settings** — display name, tags, preferred model, custom launch flags
+- ACTIVE / REMOTE badges on running and remote-controlled sessions
 - Dark/light mode via system preference
 - Responsive layout
 - Read-only — enforced by Deno's `--deny-write=$HOME/.claude` permission
@@ -54,6 +56,6 @@ Opens http://127.0.0.1:3456 with three views:
 
 - [x] Phase 1: Core reader — session parser, project discovery, web GUI
 - [x] Phase 2: Session launcher — terminal + web launch, remote-control URL detection
-- [ ] Phase 3: Project management — new project wizard, templates
+- [x] Phase 3: Project wizard + settings — create projects, per-project metadata
 - [ ] Phase 4: Live updates — activity heatmap, file watching (SSE)
 - [ ] Phase 5: Polish — keyboard shortcuts, theme toggle, HTML export

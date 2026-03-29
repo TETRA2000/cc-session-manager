@@ -4,6 +4,7 @@ import { createApp } from "../src/server.ts";
 const config = {
   claudeHome: Deno.env.get("HOME") + "/.claude",
   port: 0,
+  projectsRoot: Deno.env.get("HOME") + "/Projects",
 };
 
 const app = createApp(config);

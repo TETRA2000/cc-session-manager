@@ -4,6 +4,7 @@ import { dashboardRoutes } from "./dashboard.ts";
 import { launcherRoutes } from "./launcher.ts";
 import { projectRoutes } from "./projects.ts";
 import { sessionRoutes } from "./sessions.ts";
+import { wizardRoutes } from "./wizard.ts";
 
 export function createApiRoutes(config: AppConfig): Hono {
   const api = new Hono();
@@ -12,6 +13,7 @@ export function createApiRoutes(config: AppConfig): Hono {
   api.route("/", projectRoutes(config));
   api.route("/", sessionRoutes(config));
   api.route("/", launcherRoutes(config));
+  api.route("/", wizardRoutes(config));
 
   return api;
 }

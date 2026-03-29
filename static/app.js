@@ -5,6 +5,7 @@ import { Header } from "./components/header.js";
 import { DashboardView } from "./components/dashboard.js";
 import { ProjectsView } from "./components/projects.js";
 import { TranscriptView } from "./components/transcript.js";
+import { WizardView } from "./components/wizard.js";
 import { Toast } from "./components/toast.js";
 
 function App() {
@@ -14,6 +15,9 @@ function App() {
   switch (currentRoute.path) {
     case "/projects":
       view = html`<${ProjectsView} />`;
+      break;
+    case "/new-project":
+      view = html`<${WizardView} />`;
       break;
     case "/transcript/:sessionId":
       view = html`<${TranscriptView} />`;

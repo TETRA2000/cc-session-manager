@@ -1,5 +1,5 @@
 import { html } from "htm/preact";
-import { route, Link } from "../lib/router.js";
+import { route, Link, navigate } from "../lib/router.js";
 
 export function Header() {
   const currentPath = route.value.path;
@@ -19,7 +19,7 @@ export function Header() {
           href="/projects"
           class=${`nav-link${currentPath === "/projects" ? " active" : ""}`}
         >Projects<//>
-        <button class="btn btn-accent" disabled>+ New project</button>
+        <button class="btn btn-accent" onclick=${() => navigate("/new-project")}>+ New project</button>
       </div>
     </div>
   `;

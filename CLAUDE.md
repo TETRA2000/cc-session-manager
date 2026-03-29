@@ -52,6 +52,7 @@ Tests live in `tests/` and use `@std/assert`. Test files:
 | `session-parser.test.ts` | JSONL streaming, metadata extraction, transcript parsing, bridge_status, command tag stripping |
 | `project-discovery.test.ts` | Path decoding, worktree detection |
 | `session-launcher.test.ts` | Shell/AppleScript escaping, launch validation |
+| `project-manager.test.ts` | Project name validation, creation (dir, git, templates), settings CRUD |
 | `api.test.ts` | HTTP route integration (dashboard, projects, sessions, launch, static files) |
 | `format.test.ts` | Frontend format utilities (tokens, paths, truncation) |
 

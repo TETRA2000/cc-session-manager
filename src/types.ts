@@ -195,6 +195,31 @@ export interface DailyActivity {
 export interface AppConfig {
   claudeHome: string;
   port: number;
+  projectsRoot: string;
+}
+
+// ─── Project wizard types ───
+
+export interface CreateProjectRequest {
+  name: string;
+  gitInit: boolean;
+  gitRemote?: string;
+  claudeMd: boolean;
+  mcpJson: boolean;
+  launchAfter: boolean;
+}
+
+export interface CreateProjectResult {
+  ok: boolean;
+  path?: string;
+  error?: string;
+}
+
+export interface ProjectSettings {
+  displayName?: string;
+  tags?: string[];
+  preferredModel?: string;
+  customLaunchFlags?: string[];
 }
 
 // ─── Launcher types ───

@@ -157,6 +157,63 @@ Launch a Claude Code session in Terminal or browser.
 
 ---
 
+## POST /api/projects/create
+
+Create a new project directory with optional git init and templates.
+
+**Request body:**
+
+```json
+{
+  "name": "my-new-app",
+  "gitInit": true,
+  "gitRemote": "https://github.com/user/repo.git",
+  "claudeMd": true,
+  "mcpJson": false,
+  "launchAfter": false
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | string | required | Directory name (alphanumeric, hyphens, dots, underscores) |
+| `gitInit` | boolean | | Run `git init` in the new directory |
+| `gitRemote` | string | | Optional remote URL (only if gitInit) |
+| `claudeMd` | boolean | true | Create starter CLAUDE.md from template |
+| `mcpJson` | boolean | | Create empty .mcp.json |
+| `launchAfter` | boolean | | Launch Claude Code session after creation |
+
+**Response:** `{ "ok": true, "path": "/Users/takahiko/Projects/my-new-app" }`
+
+---
+
+## GET /api/projects/:id/settings
+
+Get per-project settings (display name, tags, model, flags).
+
+**Response:** `{ "displayName": "My App", "tags": ["frontend"], "preferredModel": "claude-opus-4-6" }`
+
+---
+
+## PUT /api/projects/:id/settings
+
+Update per-project settings. Stored in `$PROJECTS_ROOT/.session-manager/projects.json`.
+
+**Request body:**
+
+```json
+{
+  "displayName": "My App",
+  "tags": ["frontend", "react"],
+  "preferredModel": "claude-opus-4-6",
+  "customLaunchFlags": ["--no-auto-exec"]
+}
+```
+
+**Response:** `{ "ok": true }`
+
+---
+
 ## Type Definitions
 
 ### ProjectSummary

@@ -1,9 +1,10 @@
 import { parseArgs } from "@std/cli";
+import { join } from "@std/path";
 import { loadConfig } from "./src/config.ts";
 import { createApp } from "./src/server.ts";
 
 const args = parseArgs(Deno.args, {
-  string: ["port", "claude-home"],
+  string: ["port", "claude-home", "projects-root"],
   boolean: ["no-open", "help"],
   default: {
     "no-open": false,
@@ -21,6 +22,7 @@ Usage:
 Options:
   --port <number>        Port to listen on (default: 3456)
   --claude-home <path>   Path to Claude home directory (default: ~/.claude)
+  --projects-root <path> Root directory for new projects (default: ~/Projects)
   --no-open              Don't open browser automatically
   --help                 Show this help message
 `);
@@ -30,7 +32,13 @@ Options:
 const config = loadConfig({
   port: args.port ? parseInt(args.port, 10) : undefined,
   claudeHome: args["claude-home"] ?? undefined,
+  projectsRoot: args["projects-root"] ?? undefined,
 });
+
+// Ensure .session-manager directory exists for project settings
+try {
+  await Deno.mkdir(join(config.projectsRoot, ".session-manager"), { recursive: true });
+} catch { /* already exists or no write permission in dev mode */ }
 
 // Verify projects directory exists
 try {

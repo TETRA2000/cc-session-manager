@@ -33,11 +33,13 @@ cc-session-manager/
 │   │   ├── dashboard.ts       # GET /api/dashboard
 │   │   ├── projects.ts        # GET /api/projects[/:id]
 │   │   ├── sessions.ts        # GET /api/sessions/:id/transcript
-│   │   └── launcher.ts        # POST /api/launch
+│   │   ├── launcher.ts        # POST /api/launch
+│   │   └── wizard.ts          # POST /api/projects/create, GET/PUT settings
 │   └── services/
 │       ├── session-parser.ts  # Streaming JSONL parser
 │       ├── project-discovery.ts # Project scanning + path decoding
-│       └── session-launcher.ts  # Terminal + browser launch via osascript/open
+│       ├── session-launcher.ts  # Terminal + browser launch via osascript/open
+│       └── project-manager.ts   # Project creation, settings management
 ├── static/
 │   ├── index.html             # SPA shell with importmap
 │   ├── style.css              # Unified CSS from UI mocks
@@ -54,7 +56,8 @@ cc-session-manager/
 │       ├── projects.js        # Projects list view
 │       ├── tool-call.js       # Collapsible tool call block
 │       ├── transcript.js      # Session transcript view
-│       └── toast.js           # Auto-dismissing toast notifications
+│       ├── toast.js           # Auto-dismissing toast notifications
+│       └── wizard.js          # New project wizard form
 └── tests/
     ├── fixtures/sample-session.jsonl
     ├── session-parser.test.ts
@@ -93,8 +96,11 @@ Tool results appear in subsequent `user` messages as `tool_result` content block
 GET  /api/dashboard                  → { stats, recentSessions[] }
 GET  /api/projects                   → { projects[] }
 GET  /api/projects/:id               → { project, sessions[] }
+GET  /api/projects/:id/settings      → ProjectSettings
+PUT  /api/projects/:id/settings      → { ok }
 GET  /api/sessions/:id/transcript    → { meta, entries[] }
 POST /api/launch                     → { ok, error? }
+POST /api/projects/create            → { ok, path?, error? }
 ```
 
 ### Session Launcher
@@ -118,12 +124,14 @@ Enforced via Deno's permission flags at runtime:
 | `--deny-write` | `~/.claude` | Prevent modification of Claude's state |
 | `--allow-net` | `127.0.0.1:3456` | Local-only HTTP server |
 | `--allow-env` | `HOME` | Resolve home directory |
-| `--allow-run` | `osascript`, `open` | Launch Terminal.app and open browser URLs |
+| `--allow-run` | `osascript`, `open`, `git` | Launch Terminal, open browser, git init |
+| `--allow-write` | `$PROJECTS_ROOT` | Create new projects (default: `~/Projects`) |
 
 ## Phased Development
 
 - **Phase 1**: Core reader — session parser, project discovery, web GUI
-- **Phase 2 (current)**: Session launcher — terminal + web launch, remote-control URL detection
+- **Phase 2**: Session launcher — terminal + web launch, remote-control URL detection
+- **Phase 3 (current)**: Project wizard + settings — create projects, per-project metadata
 - **Phase 3**: Project management — new project wizard, templates
 - **Phase 4**: Dashboard enhancements — activity heatmap, live file watching (SSE)
 - **Phase 5**: Polish — keyboard shortcuts, theme toggle, HTML export, CLI

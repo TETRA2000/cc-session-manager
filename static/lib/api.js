@@ -32,3 +32,31 @@ export async function launchSession({ mode, projectId, sessionId, prompt, target
   if (!res.ok || !data.ok) throw new Error(data.error || "Launch failed");
   return data;
 }
+
+export async function createProject(req) {
+  const res = await fetch("/api/projects/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error || "Create failed");
+  return data;
+}
+
+export async function getProjectSettings(projectId) {
+  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/settings`);
+  if (!res.ok) throw new Error("Failed to load settings");
+  return res.json();
+}
+
+export async function updateProjectSettings(projectId, settings) {
+  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/settings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error || "Save failed");
+  return data;
+}

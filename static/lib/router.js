@@ -6,6 +6,7 @@ export const route = signal({ path: "/", params: {} });
 const routes = [
   { pattern: /^\/$/, path: "/" },
   { pattern: /^\/projects$/, path: "/projects" },
+  { pattern: /^\/new-project$/, path: "/new-project" },
   { pattern: /^\/transcript\/(.+)$/, path: "/transcript/:sessionId" },
 ];
 
