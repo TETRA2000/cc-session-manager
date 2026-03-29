@@ -94,7 +94,9 @@ export async function extractSessionMetadata(
       entrypoint = line.entrypoint;
     }
 
-    // Track bridge_status: connected (has url) vs disconnected (no url)
+    // Track remote control state:
+    // - Connect: system message with subtype "bridge_status" and url field
+    // - Disconnect: system message with subtype "local_command" containing "Remote Control disconnected"
     if (line.type === "system") {
       const sMsg = line as SystemMessage;
       if (sMsg.subtype === "bridge_status") {
@@ -102,10 +104,9 @@ export async function extractSessionMetadata(
         if (typeof rawLine.url === "string") {
           webUrl = rawLine.url;
           isRemoteConnected = true;
-        } else {
-          // Disconnect event: bridge_status without url
-          isRemoteConnected = false;
         }
+      } else if (sMsg.subtype === "local_command" && sMsg.content?.includes("Remote Control disconnected")) {
+        isRemoteConnected = false;
       }
     }
 
