@@ -128,6 +128,9 @@ export interface SessionSummary {
   totalTokens: number;
   subAgentCount: number;
   webUrl: string | null;
+  isActive: boolean;
+  isRemoteConnected: boolean;
+  entrypoint: string | null;
 }
 
 export interface TranscriptEntry {

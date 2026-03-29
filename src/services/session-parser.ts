@@ -65,6 +65,8 @@ export async function extractSessionMetadata(
   let model: string | null = null;
   let cwd: string | null = null;
   let webUrl: string | null = null;
+  let isRemoteConnected = false;
+  let entrypoint: string | null = null;
   let messageCount = 0;
   let toolCallCount = 0;
   let firstTimestamp = "";
@@ -87,14 +89,22 @@ export async function extractSessionMetadata(
       cwd = line.cwd;
     }
 
-    // Extract web URL from bridge_status system messages
-    if (!webUrl && line.type === "system") {
+    // Extract entrypoint from first message that has it
+    if (!entrypoint && line.entrypoint) {
+      entrypoint = line.entrypoint;
+    }
+
+    // Track bridge_status: connected (has url) vs disconnected (no url)
+    if (line.type === "system") {
       const sMsg = line as SystemMessage;
       if (sMsg.subtype === "bridge_status") {
-        // The url field is on the raw JSON object, not typed in SystemMessage
         const rawLine = line as unknown as Record<string, unknown>;
         if (typeof rawLine.url === "string") {
           webUrl = rawLine.url;
+          isRemoteConnected = true;
+        } else {
+          // Disconnect event: bridge_status without url
+          isRemoteConnected = false;
         }
       }
     }
@@ -150,6 +160,9 @@ export async function extractSessionMetadata(
     totalTokens: totalOutputTokens,
     subAgentCount: 0,
     webUrl,
+    isActive: false, // set by caller from ~/.claude/sessions/
+    isRemoteConnected,
+    entrypoint,
   };
 }
 

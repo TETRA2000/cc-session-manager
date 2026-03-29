@@ -687,6 +687,16 @@ body {
     color: var(--purple-text);
     border-color: rgba(175, 169, 236, 0.3);
   }
+  .badge-active {
+    background: rgba(29, 158, 117, 0.15);
+    color: #5DCAA5;
+    border-color: rgba(93, 202, 165, 0.3);
+  }
+  .badge-remote {
+    background: rgba(24, 95, 165, 0.15);
+    color: #7CB8E8;
+    border-color: rgba(124, 184, 232, 0.3);
+  }
 }
 
 /* ─── Toast Notifications ─── */
@@ -723,7 +733,9 @@ body {
 
 /* ─── Web Badge ─── */
 
-.badge-web {
+.badge-web,
+.badge-active,
+.badge-remote {
   display: inline-block;
   padding: 1px 6px;
   font-family: var(--font-mono);
@@ -731,10 +743,25 @@ body {
   font-weight: 600;
   letter-spacing: 0.5px;
   border-radius: 4px;
+  margin-left: 6px;
+}
+
+.badge-web {
   background: var(--purple-fill, #EEEDFE);
   color: var(--purple-text, #534AB7);
   border: 1px solid rgba(127, 119, 221, 0.3);
-  margin-left: 6px;
+}
+
+.badge-active {
+  background: var(--green-fill, #E1F5EE);
+  color: var(--green-text, #0F6E56);
+  border: 1px solid var(--green-border, #9FE1CB);
+}
+
+.badge-remote {
+  background: var(--blue-fill, #E6F1FB);
+  color: var(--blue-text, #185FA5);
+  border: 1px solid rgba(24, 95, 165, 0.3);
 }
 
 /* ─── Launch Dropdown ─── */

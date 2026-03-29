@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { join } from "@std/path";
 import type { AppConfig, DashboardStats, SessionFileInfo } from "../types.ts";
-import { discoverProjects, listSessionFiles } from "../services/project-discovery.ts";
+import { discoverProjects, listSessionFiles, getActiveSessionIds } from "../services/project-discovery.ts";
 import { extractSessionMetadata } from "../services/session-parser.ts";
 
 export function dashboardRoutes(config: AppConfig): Hono {
@@ -29,13 +29,17 @@ export function dashboardRoutes(config: AppConfig): Hono {
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const active7d = allFiles.filter((f) => f.mtimeMs >= sevenDaysAgo).length;
 
-    // Parse only the top ~20 most recent files to find 10 with actual content
+    // Get active session IDs
+    const activeIds = await getActiveSessionIds(config.claudeHome);
+
+    // Parse only the top ~30 most recent files to find 10 with actual content
     const recentSessions = [];
     const candidates = allFiles.slice(0, 30);
     for (const f of candidates) {
       if (recentSessions.length >= 10) break;
       try {
         const meta = await extractSessionMetadata(f.jsonlPath, f.id, f.projectId);
+        meta.isActive = activeIds.has(f.id);
         if (meta.messageCount > 0) {
           recentSessions.push(meta);
         }

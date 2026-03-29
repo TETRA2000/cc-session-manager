@@ -6,9 +6,7 @@ import { launchSession } from "../lib/api.js";
 import { showToast } from "./toast.js";
 
 export function SessionRow({ session, showProject = false }) {
-  const now = Date.now();
-  const lastMs = session.lastTimestamp ? new Date(session.lastTimestamp).getTime() : 0;
-  const isActive = now - lastMs < 3600000; // active within last hour
+  const isActive = session.isActive || false;
   const dotClass = isActive ? "dot purple" : "dot muted";
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -46,7 +44,9 @@ export function SessionRow({ session, showProject = false }) {
       <div class=${dotClass}></div>
       <div class="session-summary">${session.summary || session.id}</div>
       ${session.gitBranch && html`<span class="branch">${session.gitBranch}</span>`}
-      ${hasWeb && html`<span class="badge-web">WEB</span>`}
+      ${isActive && html`<span class="badge-active">ACTIVE</span>`}
+      ${session.isRemoteConnected && html`<span class="badge-remote">REMOTE</span>`}
+      ${hasWeb && !session.isRemoteConnected && html`<span class="badge-web">WEB</span>`}
       ${showProject && html`<div class="session-project">${session.projectId || ""}</div>`}
       <div class="session-msgs">${session.messageCount || 0}</div>
       <div class="session-time">${timeAgo(session.lastTimestamp)}</div>

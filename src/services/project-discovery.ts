@@ -172,6 +172,28 @@ export async function listSessionFiles(projectDir: string): Promise<SessionFileI
   return files;
 }
 
+// ─── Active session detection from ~/.claude/sessions/ ───
+
+export async function getActiveSessionIds(claudeHome: string): Promise<Set<string>> {
+  const sessionsDir = join(claudeHome, "sessions");
+  const activeIds = new Set<string>();
+
+  try {
+    for await (const entry of Deno.readDir(sessionsDir)) {
+      if (!entry.isFile || !entry.name.endsWith(".json")) continue;
+      try {
+        const text = await Deno.readTextFile(join(sessionsDir, entry.name));
+        const data = JSON.parse(text);
+        if (data.sessionId) {
+          activeIds.add(data.sessionId);
+        }
+      } catch { /* skip */ }
+    }
+  } catch { /* sessions dir doesn't exist */ }
+
+  return activeIds;
+}
+
 // ─── Get all sessions for a project ───
 
 export async function getProjectSessions(
@@ -180,12 +202,14 @@ export async function getProjectSessions(
 ): Promise<SessionSummary[]> {
   const projectDir = join(claudeHome, "projects", projectId);
   const sessionFiles = await listSessionFiles(projectDir);
+  const activeIds = await getActiveSessionIds(claudeHome);
 
   const sessions: SessionSummary[] = [];
 
   for (const sf of sessionFiles) {
     try {
       const meta = await extractSessionMetadata(sf.jsonlPath, sf.id, projectId);
+      meta.isActive = activeIds.has(sf.id);
 
       // Check for subagents
       if (sf.dirPath) {
