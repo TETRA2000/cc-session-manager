@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Session Manager — Projects</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f8;
+    --bg-tertiary: #ececee;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5a5a6a;
+    --text-tertiary: #9a9aaa;
+    --border-tertiary: rgba(0,0,0,0.1);
+    --border-secondary: rgba(0,0,0,0.2);
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1a1a22;
+      --bg-secondary: #131318;
+      --bg-tertiary: #23232e;
+      --text-primary: #e8e6f0;
+      --text-secondary: #b0aec0;
+      --text-tertiary: #706e82;
+      --border-tertiary: rgba(255,255,255,0.08);
+      --border-secondary: rgba(255,255,255,0.15);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 0.5px solid var(--border-tertiary);
+  }
+
+  .header {
+    padding: 14px 20px;
+    border-bottom: 0.5px solid var(--border-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7F77DD;
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    color: #7F77DD;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .search-box {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    width: 180px;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border-tertiary);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    outline: none;
+  }
+  .search-box:focus { border-color: var(--border-secondary); }
+  .search-box::placeholder { color: var(--text-tertiary); }
+
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 5px 12px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-tertiary);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn:hover { background: var(--bg-secondary); }
+
+  .btn-accent {
+    background: #EEEDFE;
+    border-color: #CECBF6;
+    color: #534AB7;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-accent { background: rgba(127,119,221,0.15); border-color: rgba(127,119,221,0.3); color: #AFA9EC; }
+  }
+
+  .content { padding: 20px; }
+
+  /* Project row */
+  .project-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  .project-header:hover { filter: brightness(0.97); }
+
+  @media (prefers-color-scheme: dark) {
+    .project-header:hover { filter: brightness(1.1); }
+  }
+
+  .project-chevron {
+    font-size: 9px;
+    color: var(--text-tertiary);
+    transition: transform 200ms ease;
+    width: 10px;
+    text-align: center;
+  }
+  .project-chevron.open { transform: rotate(90deg); }
+
+  .project-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .icon-managed { background: #E1F5EE; color: #0F6E56; }
+  .icon-external { background: #E6F1FB; color: #185FA5; }
+
+  @media (prefers-color-scheme: dark) {
+    .icon-managed { background: rgba(30,158,117,0.15); color: #5DCAA5; }
+    .icon-external { background: rgba(24,95,165,0.15); color: #85B7EB; }
+  }
+
+  .project-name {
+    font-size: 14px;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .project-path {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .project-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .btn-continue {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 4px 8px;
+    border-radius: var(--radius-md);
+    background: #E1F5EE;
+    border: 0.5px solid #9FE1CB;
+    color: #0F6E56;
+    cursor: pointer;
+  }
+  .btn-continue:hover { background: #d0f0e0; }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-continue { background: rgba(30,158,117,0.15); border-color: rgba(30,158,117,0.3); color: #5DCAA5; }
+    .btn-continue:hover { background: rgba(30,158,117,0.25); }
+  }
+
+  /* Session rows inside project */
+  .project-sessions {
+    margin-top: 1px;
+    margin-left: 42px;
+    border-left: 1px solid var(--border-tertiary);
+    padding-left: 16px;
+    padding-bottom: 8px;
+  }
+
+  .session-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 120ms ease;
+    margin-bottom: 1px;
+  }
+  .session-row:hover { background: var(--bg-secondary); }
+  .session-row.active { background: rgba(127,119,221,0.06); }
+
+  .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.purple { background: #7F77DD; }
+  .dot.muted { background: var(--text-tertiary); }
+
+  .session-summary {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .branch {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #0F6E56;
+    background: #E1F5EE;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .branch { background: rgba(30,158,117,0.15); color: #5DCAA5; }
+  }
+
+  .session-msgs {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    width: 50px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .session-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    width: 55px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .btn-resume {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-tertiary);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .btn-resume:hover { background: var(--bg-secondary); }
+
+  .btn-resume.active {
+    background: #E1F5EE;
+    border-color: #9FE1CB;
+    color: #0F6E56;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-resume.active { background: rgba(30,158,117,0.15); border-color: rgba(30,158,117,0.3); color: #5DCAA5; }
+  }
+
+  .project-group { margin-bottom: 4px; }
+  .project-group.expanded { margin-bottom: 16px; }
+
+  @media (max-width: 768px) {
+    body { padding: 12px; }
+    .project-path { display: none; }
+    .session-msgs { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">CLAUDE SESSION MANAGER</span>
+    </div>
+    <div class="header-actions">
+      <input class="search-box" type="text" placeholder="Filter projects..." />
+      <a class="btn" href="01-dashboard.html">Dashboard</a>
+      <a class="btn btn-accent" href="03-new-project.html">+ New project</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Project 1: sleep-lens (expanded) -->
+    <div class="project-group expanded">
+      <div class="project-header">
+        <span class="project-chevron open">▶</span>
+        <div class="project-icon icon-managed">◆</div>
+        <span class="project-name">sleep-lens</span>
+        <span class="project-path">~/Code/sleep-lens</span>
+        <span class="project-count">8 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+
+      <div class="project-sessions">
+        <div class="session-row active">
+          <div class="dot purple"></div>
+          <div class="session-summary">Fix HealthKit sync crash on iOS 18.4</div>
+          <span class="branch">main</span>
+          <div class="session-msgs">24 msgs</div>
+          <div class="session-time">2m ago</div>
+          <button class="btn-resume active">▶ Resume</button>
+        </div>
+        <div class="session-row">
+          <div class="dot muted"></div>
+          <div class="session-summary">Add sleep score widget with SwiftUI Charts</div>
+          <span class="branch">feat/widget</span>
+          <div class="session-msgs">41 msgs</div>
+          <div class="session-time">3h ago</div>
+          <button class="btn-resume">▶ Resume</button>
+        </div>
+        <div class="session-row">
+          <div class="dot muted"></div>
+          <div class="session-summary">Refactor CoreData schema for sleep stages</div>
+          <span class="branch">refactor/db</span>
+          <div class="session-msgs">67 msgs</div>
+          <div class="session-time">1d ago</div>
+          <button class="btn-resume">▶ Resume</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project 2: agent-sdk-harness (collapsed) -->
+    <div class="project-group">
+      <div class="project-header">
+        <span class="project-chevron">▶</span>
+        <div class="project-icon icon-managed">◆</div>
+        <span class="project-name">agent-sdk-harness</span>
+        <span class="project-path">~/Code/agent-sdk-harness</span>
+        <span class="project-count">12 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+    </div>
+
+    <!-- Project 3: redmine-mcp (collapsed) -->
+    <div class="project-group">
+      <div class="project-header">
+        <span class="project-chevron">▶</span>
+        <div class="project-icon icon-managed">◆</div>
+        <span class="project-name">redmine-mcp</span>
+        <span class="project-path">~/Code/redmine-mcp</span>
+        <span class="project-count">3 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+    </div>
+
+    <!-- Project 4: figma-pipeline (collapsed, external) -->
+    <div class="project-group">
+      <div class="project-header">
+        <span class="project-chevron">▶</span>
+        <div class="project-icon icon-external">◇</div>
+        <span class="project-name">figma-pipeline</span>
+        <span class="project-path">~/Work/figma-pipeline</span>
+        <span class="project-count">6 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+    </div>
+
+    <!-- Project 5: auto-journal (collapsed) -->
+    <div class="project-group">
+      <div class="project-header">
+        <span class="project-chevron">▶</span>
+        <div class="project-icon icon-managed">◆</div>
+        <span class="project-name">auto-journal</span>
+        <span class="project-path">~/Code/auto-journal</span>
+        <span class="project-count">5 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+    </div>
+
+    <!-- Project 6: prd-mixer (collapsed) -->
+    <div class="project-group">
+      <div class="project-header">
+        <span class="project-chevron">▶</span>
+        <div class="project-icon icon-managed">◆</div>
+        <span class="project-name">prd-mixer</span>
+        <span class="project-path">~/Code/prd-mixer</span>
+        <span class="project-count">4 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+    </div>
+
+    <!-- Project 7: catfit-design (collapsed, external) -->
+    <div class="project-group">
+      <div class="project-header">
+        <span class="project-chevron">▶</span>
+        <div class="project-icon icon-external">◇</div>
+        <span class="project-name">catfit-design</span>
+        <span class="project-path">~/Work/catfit-design</span>
+        <span class="project-count">2 sessions</span>
+        <button class="btn-continue">▶ Continue</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

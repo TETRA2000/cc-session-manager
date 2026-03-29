@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Session Manager — Transcript</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f8;
+    --bg-tertiary: #ececee;
+    --text-primary: #1a1a1a;
+    --text-secondary: #5a5a6a;
+    --text-tertiary: #9a9aaa;
+    --border-tertiary: rgba(0,0,0,0.1);
+    --border-secondary: rgba(0,0,0,0.2);
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --purple-fill: #EEEDFE;
+    --purple-text: #534AB7;
+    --blue-fill: #E6F1FB;
+    --blue-text: #185FA5;
+    --green-fill: #E1F5EE;
+    --green-text: #0F6E56;
+    --green-border: #9FE1CB;
+    --orange-text: #D85A30;
+    --code-bg: #f5f5f7;
+
+    --kw: #534AB7;
+    --str: #1D9E75;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-primary: #1a1a22;
+      --bg-secondary: #131318;
+      --bg-tertiary: #23232e;
+      --text-primary: #e8e6f0;
+      --text-secondary: #b0aec0;
+      --text-tertiary: #706e82;
+      --border-tertiary: rgba(255,255,255,0.08);
+      --border-secondary: rgba(255,255,255,0.15);
+
+      --purple-fill: rgba(127,119,221,0.12);
+      --purple-text: #AFA9EC;
+      --blue-fill: rgba(24,95,165,0.12);
+      --blue-text: #85B7EB;
+      --green-fill: rgba(30,158,117,0.12);
+      --green-text: #5DCAA5;
+      --green-border: rgba(30,158,117,0.3);
+      --orange-text: #F0997B;
+      --code-bg: #23232e;
+
+      --kw: #AFA9EC;
+      --str: #5DCAA5;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 0.5px solid var(--border-tertiary);
+  }
+
+  /* Header */
+  .header {
+    padding: 14px 20px;
+    border-bottom: 0.5px solid var(--border-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7F77DD;
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    color: #7F77DD;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 5px 12px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-tertiary);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn:hover { background: var(--bg-secondary); }
+
+  /* Session bar */
+  .session-bar {
+    padding: 12px 20px;
+    border-bottom: 0.5px solid var(--border-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+  }
+
+  .session-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .project-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    background: var(--green-fill);
+    color: var(--green-text);
+  }
+
+  .session-bar-name { font-size: 14px; font-weight: 500; }
+  .session-bar-sep { color: var(--text-tertiary); font-size: 14px; }
+  .session-bar-summary { font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary); }
+
+  .session-bar-actions { display: flex; gap: 6px; }
+
+  .btn-copy {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border-tertiary);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  .btn-resume {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    background: var(--green-fill);
+    border: 0.5px solid var(--green-border);
+    color: var(--green-text);
+    cursor: pointer;
+  }
+
+  .btn-continue {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    background: var(--purple-fill);
+    border: 0.5px solid #CECBF6;
+    color: var(--purple-text);
+    cursor: pointer;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-continue { border-color: rgba(127,119,221,0.3); }
+  }
+
+  /* Meta bar */
+  .meta-bar {
+    margin: 16px 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 9px 14px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .meta-bar .val { color: var(--text-secondary); }
+
+  .meta-branch {
+    color: var(--green-text);
+    background: var(--green-fill);
+    padding: 0 4px;
+    border-radius: 3px;
+  }
+
+  /* Transcript */
+  .transcript {
+    padding: 20px;
+    max-width: 780px;
+  }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .msg-avatar.user { background: var(--blue-fill); color: var(--blue-text); }
+  .msg-avatar.assistant { background: var(--purple-fill); color: var(--purple-text); }
+
+  .msg-body { flex: 1; min-width: 0; }
+
+  .msg-role {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+  }
+  .msg-role.user { color: var(--blue-text); }
+  .msg-role.assistant { color: var(--purple-text); }
+
+  .msg-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+
+  .msg-text code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--orange-text);
+  }
+
+  /* Tool calls */
+  .tool-call {
+    border: 0.5px solid var(--border-tertiary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 10px 0;
+  }
+
+  .tool-call-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--orange-text);
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    text-align: left;
+  }
+  .tool-call-header:hover { filter: brightness(0.97); }
+
+  @media (prefers-color-scheme: dark) {
+    .tool-call-header:hover { filter: brightness(1.1); }
+  }
+
+  .tool-call-header .tool-path { color: var(--text-tertiary); }
+
+  .tool-call-body {
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  .tool-call-body .kw { color: var(--kw); }
+  .tool-call-body .str { color: var(--str); }
+
+  @media (max-width: 768px) {
+    body { padding: 12px; }
+    .session-bar { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .meta-bar { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">CLAUDE SESSION MANAGER</span>
+    </div>
+    <div class="header-actions">
+      <a class="btn" href="01-dashboard.html">&larr; Dashboard</a>
+      <a class="btn" href="02-projects.html">Projects</a>
+    </div>
+  </div>
+
+  <!-- Session header bar -->
+  <div class="session-bar">
+    <div class="session-breadcrumb">
+      <div class="project-icon">◆</div>
+      <span class="session-bar-name">sleep-lens</span>
+      <span class="session-bar-sep">/</span>
+      <span class="session-bar-summary">Fix HealthKit sync crash on iOS 18.4</span>
+    </div>
+    <div class="session-bar-actions">
+      <button class="btn-copy">Copy ID</button>
+      <button class="btn-resume">▶ Resume</button>
+      <button class="btn-continue">Continue latest</button>
+    </div>
+  </div>
+
+  <!-- Meta bar -->
+  <div class="meta-bar">
+    <span>Branch: <span class="meta-branch">main</span></span>
+    <span>Messages: <span class="val">24</span></span>
+    <span>Model: <span class="val">sonnet-4</span></span>
+    <span>Tokens: <span class="val">3.6K↑ 1.2K↓</span></span>
+    <span>Session: <span class="val">abc12345</span></span>
+    <span>Updated: <span class="val">2 min ago</span></span>
+  </div>
+
+  <!-- Transcript -->
+  <div class="transcript">
+
+    <!-- User message 1 -->
+    <div class="msg">
+      <div class="msg-avatar user">U</div>
+      <div class="msg-body">
+        <div class="msg-role user">USER</div>
+        <div class="msg-text">The app crashes when HealthKit authorization is denied on iOS 18.4. The crash log shows an unexpected nil in <code>SleepDataManager.fetchSleepData()</code>. Can you fix this?</div>
+      </div>
+    </div>
+
+    <!-- Assistant message 1 -->
+    <div class="msg">
+      <div class="msg-avatar assistant">C</div>
+      <div class="msg-body">
+        <div class="msg-role assistant">ASSISTANT</div>
+        <div class="msg-text">I'll investigate the crash. Let me first look at the SleepDataManager implementation.</div>
+
+        <!-- Tool call: collapsed -->
+        <div class="tool-call">
+          <button class="tool-call-header">
+            <span>▸</span>
+            <span>⚡ Read</span>
+            <span class="tool-path">src/managers/SleepDataManager.swift</span>
+          </button>
+        </div>
+
+        <div class="msg-text">Found the issue. The <code>fetchSleepData()</code> method force-unwraps the HealthKit store without checking authorization status. On iOS 18.4, denied authorization returns nil instead of an empty result.</div>
+
+        <!-- Tool call: expanded -->
+        <div class="tool-call">
+          <button class="tool-call-header">
+            <span>▾</span>
+            <span>⚡ Edit</span>
+            <span class="tool-path">src/managers/SleepDataManager.swift</span>
+          </button>
+          <div class="tool-call-body"><span class="kw">guard let</span> store = healthStore <span class="kw">else</span> {
+    logger.warning(<span class="str">"HealthKit store unavailable"</span>)
+    <span class="kw">return</span> []
+}
+<span class="kw">let</span> status = store.authorizationStatus(<span class="kw">for</span>: sleepType)
+<span class="kw">guard</span> status == .sharingAuthorized <span class="kw">else</span> {
+    <span class="kw">return</span> []
+}</div>
+        </div>
+
+        <div class="msg-text">I've added a guard clause that checks both store availability and authorization status before attempting to fetch sleep data. This prevents the crash on iOS 18.4 when the user denies HealthKit access.</div>
+      </div>
+    </div>
+
+    <!-- User message 2 -->
+    <div class="msg">
+      <div class="msg-avatar user">U</div>
+      <div class="msg-body">
+        <div class="msg-role user">USER</div>
+        <div class="msg-text">That looks right. Please also add a test for the denied authorization case.</div>
+      </div>
+    </div>
+
+    <!-- Assistant message 2 -->
+    <div class="msg">
+      <div class="msg-avatar assistant">C</div>
+      <div class="msg-body">
+        <div class="msg-role assistant">ASSISTANT</div>
+        <div class="msg-text">I'll add a unit test that verifies the handler returns an empty array when authorization is denied.</div>
+
+        <!-- Tool call: collapsed -->
+        <div class="tool-call">
+          <button class="tool-call-header">
+            <span>▸</span>
+            <span>⚡ Edit</span>
+            <span class="tool-path">Tests/SleepDataManagerTests.swift</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
