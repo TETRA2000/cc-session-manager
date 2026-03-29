@@ -164,6 +164,7 @@ export async function extractSessionMetadata(
     isActive: false, // set by caller from ~/.claude/sessions/
     isRemoteConnected,
     entrypoint,
+    aiSummary: null, // populated by summary-service
   };
 }
 

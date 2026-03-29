@@ -42,7 +42,7 @@ export function SessionRow({ session, showProject = false }) {
   return html`
     <div class="session-row" onclick=${handleClick}>
       <div class=${dotClass}></div>
-      <div class="session-summary">${session.summary || session.id}</div>
+      <div class="session-summary">${session.aiSummary || session.summary || session.id}</div>
       ${session.gitBranch && html`<span class="branch">${session.gitBranch}</span>`}
       ${isActive && html`<span class="badge-active">ACTIVE</span>`}
       ${isRemote && html`<span class="badge-remote">REMOTE</span>`}

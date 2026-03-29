@@ -131,6 +131,7 @@ export interface SessionSummary {
   isActive: boolean;
   isRemoteConnected: boolean;
   entrypoint: string | null;
+  aiSummary: string | null;
 }
 
 export interface TranscriptEntry {
@@ -220,6 +221,14 @@ export interface ProjectSettings {
   tags?: string[];
   preferredModel?: string;
   customLaunchFlags?: string[];
+}
+
+// ─── Summary cache types ───
+
+export interface SummaryCacheEntry {
+  aiSummary: string;
+  messageCount: number;
+  generatedAt: string;
 }
 
 // ─── Launcher types ───

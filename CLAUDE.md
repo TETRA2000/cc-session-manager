@@ -40,6 +40,9 @@ deno task check  # TypeScript type check
 - Tool results appear in subsequent user messages as `tool_result` blocks
 - `bridge_status` system messages contain web session URLs from `/remote-control`
 - Active sessions detected from PID files in `~/.claude/sessions/*.json`
+- AI summaries generated via Anthropic SDK (Haiku), cached in `$PROJECTS_ROOT/.session-manager/summaries.json`
+- Summary cache keyed by sessionId + messageCount — regenerated only when session has new messages
+- Gracefully degrades when `ANTHROPIC_API_KEY` is not set (shows basic first-message summary)
 
 ## Testing Requirements
 
@@ -53,6 +56,7 @@ Tests live in `tests/` and use `@std/assert`. Test files:
 | `project-discovery.test.ts` | Path decoding, worktree detection |
 | `session-launcher.test.ts` | Shell/AppleScript escaping, launch validation |
 | `project-manager.test.ts` | Project name validation, creation (dir, git, templates), settings CRUD |
+| `summary-service.test.ts` | Summary cache lookup, staleness detection, persistence |
 | `api.test.ts` | HTTP route integration (dashboard, projects, sessions, launch, static files) |
 | `format.test.ts` | Frontend format utilities (tokens, paths, truncation) |
 

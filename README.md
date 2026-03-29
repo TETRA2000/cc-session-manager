@@ -26,6 +26,7 @@ Opens http://127.0.0.1:3456 with three views:
 - **Open in Web** — sessions with active remote-control link directly to `claude.ai/code`
 - **New Project Wizard** — create directory, git init, CLAUDE.md/.mcp.json templates
 - **Per-project settings** — display name, tags, preferred model, custom launch flags
+- **AI-generated summaries** — Haiku generates descriptive titles, cached and refreshed in background
 - ACTIVE / REMOTE badges on running and remote-controlled sessions
 - Dark/light mode via system preference
 - Responsive layout

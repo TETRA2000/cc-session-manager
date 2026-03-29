@@ -3,6 +3,7 @@ import { join } from "@std/path";
 import type { AppConfig, DashboardStats, SessionFileInfo } from "../types.ts";
 import { discoverProjects, listSessionFiles, getActiveSessionIds } from "../services/project-discovery.ts";
 import { extractSessionMetadata } from "../services/session-parser.ts";
+import { attachSummaries, refreshSummaries } from "../services/summary-service.ts";
 
 export function dashboardRoutes(config: AppConfig): Hono {
   const app = new Hono();
@@ -45,6 +46,10 @@ export function dashboardRoutes(config: AppConfig): Hono {
         }
       } catch { /* skip */ }
     }
+
+    // Attach cached AI summaries, then kick off background refresh for stale ones
+    await attachSummaries(config.projectsRoot, recentSessions);
+    refreshSummaries(config.projectsRoot, config.claudeHome, recentSessions).catch(() => {});
 
     const stats: DashboardStats = {
       projects: projects.length,
