@@ -1,5 +1,5 @@
 import { html } from "htm/preact";
-import { useState, useEffect } from "preact/hooks";
+import { useState, useEffect, useRef } from "preact/hooks";
 import { route } from "../lib/router.js";
 import { getTranscript, launchSession } from "../lib/api.js";
 import { timeAgo, formatTokens, truncate } from "../lib/format.js";
@@ -74,6 +74,7 @@ export function TranscriptPanel({ sessionId, compact = false }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const transcriptEnd = useRef(null);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -88,6 +89,13 @@ export function TranscriptPanel({ sessionId, compact = false }) {
         setLoading(false);
       });
   }, [sessionId]);
+
+  // Scroll to bottom when transcript loads
+  useEffect(() => {
+    if (data && transcriptEnd.current) {
+      transcriptEnd.current.scrollIntoView({ behavior: "instant" });
+    }
+  }, [data]);
 
   const copyId = () => {
     navigator.clipboard.writeText(sessionId).then(() => {
@@ -162,6 +170,7 @@ export function TranscriptPanel({ sessionId, compact = false }) {
         ${entries.map(
           (e, i) => html`<${Message} key=${e.uuid || i} entry=${e} />`
         )}
+        <div ref=${transcriptEnd}></div>
       </div>
     </div>
   `;
