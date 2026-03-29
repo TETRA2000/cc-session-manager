@@ -37,7 +37,7 @@ export function SessionRow({ session, showProject = false }) {
     setMenuOpen(!menuOpen);
   };
 
-  const hasWeb = !!session.webUrl;
+  const isRemote = !!session.isRemoteConnected;
 
   return html`
     <div class="session-row" onclick=${handleClick}>
@@ -45,12 +45,11 @@ export function SessionRow({ session, showProject = false }) {
       <div class="session-summary">${session.summary || session.id}</div>
       ${session.gitBranch && html`<span class="branch">${session.gitBranch}</span>`}
       ${isActive && html`<span class="badge-active">ACTIVE</span>`}
-      ${session.isRemoteConnected && html`<span class="badge-remote">REMOTE</span>`}
-      ${hasWeb && !session.isRemoteConnected && html`<span class="badge-web">WEB</span>`}
+      ${isRemote && html`<span class="badge-remote">REMOTE</span>`}
       ${showProject && html`<div class="session-project">${session.projectId || ""}</div>`}
       <div class="session-msgs">${session.messageCount || 0}</div>
       <div class="session-time">${timeAgo(session.lastTimestamp)}</div>
-      ${hasWeb
+      ${isRemote
         ? html`
           <div class="launch-group">
             <button class="btn-resume" onclick=${handleResume}>${"\u25B6"} Resume</button>

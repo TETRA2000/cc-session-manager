@@ -138,7 +138,7 @@ export function TranscriptView() {
           <button class="btn-copy" onclick=${copyId}>${copied ? "Copied!" : "Copy ID"}</button>
           <button class="btn-resume" onclick=${handleResume}>${"\u25B6"} Resume</button>
           <button class="btn-continue" onclick=${handleContinue}>Continue latest</button>
-          ${meta.webUrl && html`<button class="btn-resume" onclick=${handleWebOpen}>Open in Web</button>`}
+          ${meta.isRemoteConnected && html`<button class="btn-resume" onclick=${handleWebOpen}>Open in Web</button>`}
         </div>
       </div>
 
