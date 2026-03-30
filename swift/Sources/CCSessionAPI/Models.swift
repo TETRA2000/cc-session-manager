@@ -125,8 +125,49 @@ public struct ToolCallEntry: Codable, Sendable, Identifiable {
     public let id: String
     public let name: String
     public let input: [String: JSONValue]
-    public let result: String?
+    public let result: ToolResult?
     public let isError: Bool?
+
+    public var resultText: String? {
+        result?.text
+    }
+}
+
+/// Tool result can be a string or an array of content blocks
+public enum ToolResult: Codable, Sendable {
+    case string(String)
+    case array([JSONValue])
+
+    public var text: String? {
+        switch self {
+        case .string(let s): return s
+        case .array(let items):
+            return items.compactMap { item -> String? in
+                if case .object(let obj) = item, case .string(let text)? = obj["text"] { return text }
+                if case .string(let s) = item { return s }
+                return nil
+            }.joined(separator: "\n")
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let s = try? container.decode(String.self) {
+            self = .string(s)
+        } else if let arr = try? container.decode([JSONValue].self) {
+            self = .array(arr)
+        } else {
+            self = .string("")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let s): try container.encode(s)
+        case .array(let arr): try container.encode(arr)
+        }
+    }
 }
 
 public struct TranscriptEntry: Codable, Sendable, Identifiable {

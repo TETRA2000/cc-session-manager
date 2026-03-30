@@ -126,7 +126,7 @@ struct TranscriptCmd: AsyncParsableCommand {
             for tool in entry.toolCalls {
                 let err = tool.isError == true ? " [ERROR]" : ""
                 print("  → \(tool.name)\(err)")
-                if let result = tool.result {
+                if let result = tool.resultText {
                     let truncated = result.count > 200 ? String(result.prefix(200)) + "..." : result
                     print("    \(truncated)")
                 }

@@ -135,7 +135,7 @@ struct ToolCallView: View {
                 }
 
                 // Result
-                if let result = tool.result {
+                if let result = tool.resultText {
                     Text(tool.isError == true ? "Error" : "Result")
                         .font(.caption)
                         .fontWeight(.semibold)
