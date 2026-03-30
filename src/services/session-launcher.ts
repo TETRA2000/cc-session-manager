@@ -81,7 +81,7 @@ export async function launchSession(req: LaunchRequest): Promise<LaunchResult> {
       if (!req.sessionId) {
         return { ok: false, error: "sessionId required for resume mode" };
       }
-      claudeArgs = ["--resume", req.sessionId];
+      claudeArgs = ["--resume", escapeForShell(req.sessionId)];
       break;
     case "continue":
       claudeArgs = ["--continue"];

@@ -10,6 +10,11 @@ export function sessionRoutes(config: AppConfig): Hono {
   app.get("/sessions/:sessionId/transcript", async (c) => {
     const sessionId = c.req.param("sessionId");
 
+    // Validate sessionId format to prevent path traversal
+    if (!/^[a-f0-9-]+$/i.test(sessionId)) {
+      return c.json({ error: "Invalid session ID format" }, 400);
+    }
+
     // Find the session file across all projects
     const found = await findSessionFile(config.claudeHome, sessionId);
     if (!found) {

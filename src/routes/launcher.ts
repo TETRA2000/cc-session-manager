@@ -33,6 +33,11 @@ export function launcherRoutes(config: AppConfig): Hono {
       projectPath = getResolvedPath(projectId);
     }
 
+    // Validate sessionId format (UUID) to prevent command injection
+    if (body.sessionId && !/^[a-f0-9-]+$/i.test(body.sessionId)) {
+      return c.json({ ok: false, error: "Invalid sessionId format" }, 400);
+    }
+
     const req: LaunchRequest = {
       mode,
       projectId,

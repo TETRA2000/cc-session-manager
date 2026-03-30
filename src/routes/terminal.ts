@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { upgradeWebSocket } from "hono/deno";
 import type { AppConfig } from "../types.ts";
 import { PTYManager } from "../services/pty-manager.ts";
+import { timingSafeEqual } from "../services/auth.ts";
 
 interface ClientMessage {
   type: "connect" | "data" | "resize" | "ping";
@@ -28,7 +29,7 @@ export function terminalRoutes(config: AppConfig, ptyManager: PTYManager): Hono 
       // Validate auth token before upgrade
       if (config.authEnabled && config.token) {
         const queryToken = c.req.query("token");
-        if (queryToken !== config.token) {
+        if (!queryToken || !timingSafeEqual(queryToken, config.token)) {
           // Can't return 401 from upgradeWebSocket handler directly;
           // close immediately on open instead
           return {

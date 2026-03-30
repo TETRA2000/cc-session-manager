@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from "hono";
 import type { AppConfig } from "../types.ts";
 
-function timingSafeEqual(a: string, b: string): boolean {
+export function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   const encoder = new TextEncoder();
   const bufA = encoder.encode(a);
