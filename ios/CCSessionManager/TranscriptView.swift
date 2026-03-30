@@ -24,6 +24,7 @@ struct TranscriptView: View {
             if let webUrl = meta?.webUrl, let url = URL(string: webUrl) {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        print("[CCSessionManager] Opening webUrl: \(webUrl)")
                         UIApplication.shared.open(url)
                     } label: {
                         Label("Open in Web", systemImage: "globe")
@@ -32,6 +33,9 @@ struct TranscriptView: View {
             }
         }
         .refreshable { await loadTranscript() }
+        .onChange(of: meta?.webUrl) {
+            print("[CCSessionManager] Transcript webUrl: \(meta?.webUrl ?? "nil")")
+        }
         .task {
             if let previewData { meta = previewData.meta; entries = previewData.entries; return }
             await loadTranscript()
