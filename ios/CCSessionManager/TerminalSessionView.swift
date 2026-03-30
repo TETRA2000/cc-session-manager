@@ -10,18 +10,17 @@ final class TerminalConnection {
     var isConnected = false
     var sessionId: String?
     var error: String?
+    var onData: ((Data) -> Void)?
 
     private var task: URLSessionWebSocketTask?
-    private var onData: ((Data) -> Void)?
     private var reconnectAttempts = 0
     private let maxReconnectAttempts = 3
     private var serverURL: URL?
     private var token: String?
 
-    func connect(serverURL: URL, token: String?, onData: @escaping (Data) -> Void) {
+    func connect(serverURL: URL, token: String?) {
         self.serverURL = serverURL
         self.token = token
-        self.onData = onData
         self.reconnectAttempts = 0
         doConnect()
     }
@@ -144,12 +143,11 @@ struct TerminalUIView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> TerminalView {
         let tv = TerminalView(frame: .zero)
-        tv.configureNativeColors()
         tv.font = UIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         tv.terminalDelegate = context.coordinator
         context.coordinator.terminalView = tv
 
-        // Feed data from WebSocket into terminal
+        // Feed WebSocket data into terminal
         connection.onData = { data in
             DispatchQueue.main.async {
                 tv.feed(byteArray: ArraySlice(data))
@@ -192,6 +190,14 @@ struct TerminalUIView: UIViewRepresentable {
                 UIApplication.shared.open(url)
             }
         }
+
+        func bell(source: TerminalView) {}
+
+        func clipboardCopy(source: TerminalView, content: Data) {}
+
+        func iTermContent(source: TerminalView, content: ArraySlice<UInt8>) {}
+
+        func rangeChanged(source: TerminalView, startY: Int, endY: Int) {}
     }
 
     private func onData(_ handler: @escaping (Data) -> Void) -> TerminalUIView {
@@ -245,7 +251,7 @@ struct TerminalSessionView: View {
         connection.connect(
             serverURL: client.serverURL,
             token: saved?.token
-        ) { _ in }
+        )
 
         // If there's an initial command (e.g., launching claude), send it after connection
         if let cmd = initialCommand {

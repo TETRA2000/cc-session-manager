@@ -112,6 +112,8 @@
 			);
 			name = CCSessionManager;
 			packageProductDependencies = (
+				B10000032F7A0003001F1483 /* CCSessionAPI */,
+				B10000042F7A0004001F1483 /* SwiftTerm */,
 			);
 			productName = CCSessionManager;
 			productReference = A9ECE96E2F79ED7E001F1483 /* CCSessionManager.app */;
@@ -196,6 +198,10 @@
 			mainGroup = A9ECE9652F79ED7E001F1483;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			packageReferences = (
+				B10000012F7A0001001F1483 /* XCLocalSwiftPackageReference "swift" */,
+				B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+			);
 			productRefGroup = A9ECE96F2F79ED7E001F1483 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -267,6 +273,36 @@
 			targetProxy = A9ECE9862F79ED7F001F1483 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B10000012F7A0001001F1483 /* XCLocalSwiftPackageReference "swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../swift;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B10000032F7A0003001F1483 /* CCSessionAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CCSessionAPI;
+		};
+		B10000042F7A0004001F1483 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A9ECE98D2F79ED7F001F1483 /* Debug */ = {
