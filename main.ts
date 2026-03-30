@@ -1,7 +1,7 @@
 import { parseArgs } from "@std/cli";
 import { join } from "@std/path";
 import { loadConfig } from "./src/config.ts";
-import { createApp } from "./src/server.ts";
+import { createApp, createAppWithTerminal } from "./src/server.ts";
 
 const args = parseArgs(Deno.args, {
   string: ["port", "claude-home", "projects-root", "host", "token"],
@@ -58,7 +58,7 @@ try {
   Deno.exit(1);
 }
 
-const app = createApp(config);
+const app = config.authEnabled ? await createAppWithTerminal(config) : createApp(config);
 const url = `http://${config.host}:${config.port}`;
 
 console.log("");

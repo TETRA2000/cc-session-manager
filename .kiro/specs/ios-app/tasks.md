@@ -34,8 +34,8 @@
   - Test that existing endpoints continue to work without auth when auth is disabled
   - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6_
 
-- [ ] 3. PTY manager service
-- [ ] 3.1 (P) Implement PTY session management using pty-ffi
+- [x] 3. PTY manager service
+- [x] 3.1 (P) Implement PTY session management using pty-ffi
   - Create a service that spawns shell processes via the `@sigma/pty-ffi` JSR package
   - Support creating PTY sessions with configurable shell, working directory, and environment variables
   - Implement session lookup by ID and concurrent session tracking via an in-memory map
@@ -45,15 +45,15 @@
   - Clean up all PTY sessions on server shutdown
   - _Requirements: 5.1, 5.2, 5.8_
 
-- [ ] 3.2 (P) Add PTY manager tests
+- [x] 3.2 (P) Add PTY manager tests
   - Test session creation, lookup by ID, and destroy lifecycle
   - Test that destroying a session cleans up the PTY process
   - Test keepalive timeout: session survives brief disconnect, cleans up after timeout expires
   - Test concurrent session tracking (multiple sessions coexist)
   - _Requirements: 5.1, 5.2, 5.8_
 
-- [ ] 4. Terminal WebSocket endpoint
-- [ ] 4.1 Implement WebSocket route for terminal relay
+- [x] 4. Terminal WebSocket endpoint
+- [x] 4.1 Implement WebSocket route for terminal relay
   - Create a route handler that upgrades HTTP connections to WebSocket at `/api/terminal/ws`
   - Validate the auth token from the `?token=` query parameter before completing the upgrade
   - Implement the connection protocol: on receiving a `connect` message, spawn a new PTY or reattach to an existing session by ID
@@ -99,8 +99,8 @@
   - Test error mapping for 401, 404, 500, and network timeout responses
   - _Requirements: 3.2, 3.4, 3.6_
 
-- [ ] 7. iOS app — connection and navigation
-- [ ] 7.1 Build the server connection screen with Keychain persistence
+- [x] 7. iOS app — connection and navigation
+- [x] 7.1 Build the server connection screen with Keychain persistence
   - Create a connection view with text fields for server URL and auth token
   - Add a QR code scanner option using AVFoundation to capture server URL and token from a QR code displayed in the server startup banner
   - Validate the connection by calling the dashboard endpoint and showing success or error state
@@ -109,22 +109,22 @@
   - Provide a disconnect/reset option to clear stored credentials
   - _Requirements: 4.1, 4.2, 4.8_
 
-- [ ] 7.2 Set up app navigation structure with tab bar and routing
+- [x] 7.2 Set up app navigation structure with tab bar and routing
   - Configure the app entry point to show the connection screen when no saved credentials exist
   - Set up a `NavigationStack`-based tab bar with tabs for Dashboard, Projects, and Terminal
   - Pass the connected `SessionClient` instance to child views via the SwiftUI environment
   - Support dark and light mode via SwiftUI's automatic appearance handling
   - _Requirements: 4.7_
 
-- [ ] 8. iOS app — session browsing views
-- [ ] 8.1 (P) Build the dashboard view with stats and recent sessions
+- [x] 8. iOS app — session browsing views
+- [x] 8.1 (P) Build the dashboard view with stats and recent sessions
   - Fetch dashboard data from the API and display stat cards (project count, session count, 7-day activity, 30-day tokens)
   - Display a list of recent sessions with AI summaries, timestamps, and model badges
   - Support pull-to-refresh to reload dashboard data
   - Tapping a session navigates to its transcript
   - _Requirements: 4.3_
 
-- [ ] 8.2 (P) Build the project list with search and session detail
+- [x] 8.2 (P) Build the project list with search and session detail
   - Fetch all projects from the API and display in a searchable list
   - Filter projects by name as the user types in the search field
   - Tapping a project fetches its sessions and displays them sorted by last activity
@@ -132,7 +132,7 @@
   - Tapping a session navigates to its transcript
   - _Requirements: 4.4, 4.5_
 
-- [ ] 8.3 (P) Build the transcript viewer
+- [x] 8.3 (P) Build the transcript viewer
   - Fetch the full transcript for a session and display messages in a scrollable list
   - Render user messages, assistant messages, and system messages with distinct visual styling
   - Display tool calls paired with their results, using collapsible sections for long output
@@ -157,8 +157,8 @@
   - Show a "Session ended" message when the server sends an `exit` frame
   - _Requirements: 5.6, 5.7_
 
-- [ ] 10. Linux CLI client
-- [ ] 10.1 (P) Implement CLI commands for remote session browsing
+- [x] 10. Linux CLI client
+- [x] 10.1 (P) Implement CLI commands for remote session browsing
   - Create a root command using ArgumentParser with global `--server` and `--token` options
   - Implement `dashboard` subcommand: fetch and display project/session counts and recent sessions in formatted text
   - Implement `projects` subcommand: list all projects with session counts and last activity

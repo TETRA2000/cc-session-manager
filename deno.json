@@ -10,13 +10,16 @@
     "@std/path": "jsr:@std/path@^1",
     "@std/streams": "jsr:@std/streams@^1",
     "@std/cli": "jsr:@std/cli@^1",
-    "@std/assert": "jsr:@std/assert@^1"
+    "@std/assert": "jsr:@std/assert@^1",
+    "@sigma/pty-ffi": "jsr:@sigma/pty-ffi@^0.39"
   },
   "tasks": {
     "dev": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --watch --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --allow-run=claude,osascript,open,git --deny-write=$HOME/.claude main.ts'",
     "start": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-run=claude,git,osascript,open --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --deny-write=$HOME/.claude main.ts'",
     "check": "deno check main.ts",
-    "test": "deno test --allow-read=$HOME/.claude,.,/var/folders --allow-env=HOME,PROJECTS_ROOT --allow-write=/var/folders --allow-run=git tests/"
+    "test": "deno test --allow-read=$HOME/.claude,.,/var/folders --allow-env=HOME,PROJECTS_ROOT --allow-write=/var/folders --allow-run=git --ignore=tests/pty-manager.test.ts tests/",
+    "test:pty": "deno test --allow-all tests/pty-manager.test.ts",
+    "test:all": "deno task test && deno task test:pty"
   },
   "fmt": {
     "lineWidth": 100,
