@@ -131,7 +131,7 @@ sequenceDiagram
 
     App->>WS: Connect ws://host:3456/api/terminal/ws?token=abc123
     WS->>WS: Validate token
-    WS->>PTY: Spawn shell via node-pty
+    WS->>PTY: Spawn shell via pty-ffi
     PTY-->>WS: Shell ready
 
     loop Terminal Session
@@ -178,7 +178,7 @@ sequenceDiagram
 | 4.7 | Dark/light mode | All views | SwiftUI | — |
 | 4.8 | Connection error handling | ConnectionView | CCSessionAPI | Error |
 | 5.1 | WebSocket terminal endpoint | TerminalRoute | WebSocket API | Terminal flow |
-| 5.2 | PTY stdin/stdout relay | PTYManager | node-pty | Terminal flow |
+| 5.2 | PTY stdin/stdout relay | PTYManager | @sigma/pty-ffi | Terminal flow |
 | 5.3 | WebSocket auth | TerminalRoute | Token query param | Auth flow |
 | 5.4 | Terminal emulator view | TerminalSessionView | SwiftTerm | Terminal flow |
 | 5.5 | Terminal input support | TerminalSessionView | SwiftTerm | Terminal flow |
@@ -200,7 +200,7 @@ sequenceDiagram
 | ServerConfig | Server / Config | Extended config with host, token, auth flag | 1.1-1.4, 2.4-2.5 | AppConfig (P0) | State |
 | AuthMiddleware | Server / Middleware | Bearer token validation on /api/* | 2.1-2.6 | Hono (P0), ServerConfig (P0) | Service |
 | TerminalRoute | Server / Route | WebSocket endpoint for terminal relay | 5.1-5.3 | Hono WS (P0), PTYManager (P0) | API |
-| PTYManager | Server / Service | PTY process lifecycle management | 5.1-5.2, 5.8 | node-pty (P0) | Service |
+| PTYManager | Server / Service | PTY process lifecycle management | 5.1-5.2, 5.8 | @sigma/pty-ffi (P0) | Service |
 | CCSessionAPI | Swift / Library | Shared HTTP client for REST API | 3.1-3.6 | URLSession (P0) | Service, API |
 | Swift Models | Swift / Library | Codable structs mirroring TS types | 3.6 | Foundation (P0) | State |
 | ConnectionView | iOS / UI | Server URL + token entry, QR scan | 4.1, 4.8 | CCSessionAPI (P0), Keychain (P1) | — |
@@ -296,7 +296,8 @@ WebSocket endpoint: `GET /api/terminal/ws?token=<token>`
 **Client → Server messages:**
 ```typescript
 type ClientMessage =
-  | { type: "data"; data: string }    // base64-encoded stdin bytes
+  | { type: "connect"; sessionId?: string }  // initial or reconnect (omit sessionId for new)
+  | { type: "data"; data: string }           // base64-encoded stdin bytes
   | { type: "resize"; cols: number; rows: number }
   | { type: "ping" };
 ```
@@ -304,11 +305,14 @@ type ClientMessage =
 **Server → Client messages:**
 ```typescript
 type ServerMessage =
-  | { type: "data"; data: string }    // base64-encoded stdout bytes
+  | { type: "connected"; sessionId: string }  // confirms PTY session, use for reconnect
+  | { type: "data"; data: string }            // base64-encoded stdout bytes
   | { type: "exit"; code: number }
   | { type: "pong" }
   | { type: "error"; message: string };
 ```
+
+**Connection protocol**: Client sends `{ "type": "connect" }` after WebSocket open to create a new PTY, or `{ "type": "connect", "sessionId": "..." }` to reattach to a kept-alive PTY. Server responds with `{ "type": "connected", "sessionId": "..." }` on success or `{ "type": "error" }` if the session expired.
 
 ### Server / Service
 
@@ -453,9 +457,19 @@ public struct TranscriptEntry: Codable, Sendable, Identifiable {
 public struct ToolCallEntry: Codable, Sendable, Identifiable {
     public let id: String
     public let name: String
-    public let input: [String: AnyCodable]
+    public let input: [String: JSONValue]
     public let result: String?
     public let isError: Bool?
+}
+
+/// Dynamic JSON value type for tool call inputs (replaces AnyCodable)
+public enum JSONValue: Codable, Sendable, Equatable {
+    case string(String)
+    case number(Double)
+    case bool(Bool)
+    case object([String: JSONValue])
+    case array([JSONValue])
+    case null
 }
 
 public enum APIError: Error, Sendable {
