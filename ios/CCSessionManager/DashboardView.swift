@@ -41,8 +41,19 @@ struct DashboardView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Disconnect") {
-                        appState.disconnect()
+                    Menu {
+                        Button {
+                            openWeb()
+                        } label: {
+                            Label("Open in Browser", systemImage: "safari")
+                        }
+                        Button(role: .destructive) {
+                            appState.disconnect()
+                        } label: {
+                            Label("Disconnect", systemImage: "xmark.circle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -64,6 +75,17 @@ struct DashboardView: View {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    private func openWeb() {
+        guard let client = appState.client else { return }
+        var urlString = client.serverURL.absoluteString
+        if let saved = KeychainService.load() {
+            urlString += "/?token=\(saved.token)"
+        }
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url)
+        }
     }
 
     private func formatTokens(_ count: Int) -> String {
