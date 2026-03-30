@@ -204,14 +204,14 @@ public struct CreateProjectResult: Codable, Sendable {
 
 // MARK: - Errors
 
-public enum APIError: Error, Sendable {
+public enum APIError: Error, LocalizedError, Sendable {
     case unauthorized
     case notFound(String)
     case serverError(statusCode: Int, message: String)
     case networkError(Error)
     case decodingError(Error)
 
-    public var localizedDescription: String {
+    public var errorDescription: String? {
         switch self {
         case .unauthorized: return "Unauthorized — check your auth token"
         case .notFound(let msg): return "Not found: \(msg)"

@@ -2,6 +2,20 @@
 import FoundationNetworking
 #endif
 import Foundation
+#if canImport(os)
+import os
+#endif
+
+#if canImport(os)
+private let logger = Logger(subsystem: "CCSessionAPI", category: "SessionClient")
+#endif
+
+private func log(_ message: String) {
+    #if canImport(os)
+    logger.debug("\(message)")
+    #endif
+    print("[CCSessionAPI] \(message)")
+}
 
 public final class SessionClient: Sendable {
     public let serverURL: URL
@@ -10,6 +24,7 @@ public final class SessionClient: Sendable {
     public init(serverURL: URL, token: String? = nil) {
         self.serverURL = serverURL
         self.token = token
+        log("Init: \(serverURL.absoluteString), token: \(token != nil ? "***" : "nil")")
     }
 
     // MARK: - Dashboard
@@ -60,7 +75,7 @@ public final class SessionClient: Sendable {
 
     private func buildRequest(path: String, method: String = "GET") -> URLRequest {
         var url = serverURL.appendingPathComponent(path)
-        // URLAppendingPathComponent may encode slashes; rebuild from string
+        // appendingPathComponent may double-encode; rebuild from string
         url = URL(string: serverURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + path) ?? url
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -72,30 +87,34 @@ public final class SessionClient: Sendable {
 
     private func get<T: Decodable>(_ path: String) async throws -> T {
         let request = buildRequest(path: path)
+        log("\(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? path)")
         let (data, response) = try await performRequest(request)
-        try checkResponse(response, data: data)
-        return try decode(data)
+        try checkResponse(response, data: data, path: path)
+        return try decode(data, path: path)
     }
 
     private func post<Body: Encodable, T: Decodable>(_ path: String, body: Body, method: String = "POST") async throws -> T {
         var request = buildRequest(path: path, method: method)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(body)
+        log("\(method) \(request.url?.absoluteString ?? path)")
         let (data, response) = try await performRequest(request)
-        try checkResponse(response, data: data)
-        return try decode(data)
+        try checkResponse(response, data: data, path: path)
+        return try decode(data, path: path)
     }
 
     private func performRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
         do {
             return try await URLSession.shared.data(for: request)
         } catch {
+            log("Network error: \(error)")
             throw APIError.networkError(error)
         }
     }
 
-    private func checkResponse(_ response: URLResponse, data: Data) throws {
+    private func checkResponse(_ response: URLResponse, data: Data, path: String) throws {
         guard let httpResponse = response as? HTTPURLResponse else { return }
+        log("\(path) -> \(httpResponse.statusCode) (\(data.count) bytes)")
         switch httpResponse.statusCode {
         case 200...299:
             return
@@ -110,10 +129,13 @@ public final class SessionClient: Sendable {
         }
     }
 
-    private func decode<T: Decodable>(_ data: Data) throws -> T {
+    private func decode<T: Decodable>(_ data: Data, path: String) throws -> T {
         do {
             return try JSONDecoder().decode(T.self, from: data)
         } catch {
+            let preview = String(data: data.prefix(500), encoding: .utf8) ?? "(binary)"
+            log("Decode error for \(path): \(error)")
+            log("Response body: \(preview)")
             throw APIError.decodingError(error)
         }
     }
