@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A97A3B572F7AA8D0003172F6 /* CCSessionAPI in Frameworks */ = {isa = PBXBuildFile; productRef = B10000032F7A0003001F1483 /* CCSessionAPI */; };
+		A97A3B582F7AA8D0003172F6 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = B10000042F7A0004001F1483 /* SwiftTerm */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		A9ECE97C2F79ED7F001F1483 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A97A3B582F7AA8D0003172F6 /* SwiftTerm in Frameworks */,
+				A97A3B572F7AA8D0003172F6 /* CCSessionAPI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -197,11 +204,11 @@
 			);
 			mainGroup = A9ECE9652F79ED7E001F1483;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			packageReferences = (
-				B10000012F7A0001001F1483 /* XCLocalSwiftPackageReference "swift" */,
+				B10000012F7A0001001F1483 /* XCLocalSwiftPackageReference "../swift" */,
 				B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
+			preferredProjectObjectVersion = 77;
 			productRefGroup = A9ECE96F2F79ED7E001F1483 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -273,36 +280,6 @@
 			targetProxy = A9ECE9862F79ED7F001F1483 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		B10000012F7A0001001F1483 /* XCLocalSwiftPackageReference "swift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../swift;
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		B10000032F7A0003001F1483 /* CCSessionAPI */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = CCSessionAPI;
-		};
-		B10000042F7A0004001F1483 /* SwiftTerm */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
-			productName = SwiftTerm;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A9ECE98D2F79ED7F001F1483 /* Debug */ = {
@@ -429,11 +406,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 788YH48Y3Q;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -473,11 +451,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 788YH48Y3Q;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -651,6 +630,36 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B10000012F7A0001001F1483 /* XCLocalSwiftPackageReference "../swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../swift;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B10000032F7A0003001F1483 /* CCSessionAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CCSessionAPI;
+		};
+		B10000042F7A0004001F1483 /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B10000022F7A0002001F1483 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A9ECE9662F79ED7E001F1483 /* Project object */;
 }
