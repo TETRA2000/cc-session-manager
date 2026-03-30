@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/ArgumentParserToolInfo.build/primary.swiftdeps"
+  },
+  "/Users/takahiko/repo/cc-session-manager/swift/.build/checkouts/swift-argument-parser/Sources/ArgumentParserToolInfo/ToolInfo.swift": {
+    "dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/ArgumentParserToolInfo.build/ToolInfo.d",
+    "object": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/ArgumentParserToolInfo.build/ToolInfo.swift.o",
+    "swiftmodule": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/ArgumentParserToolInfo.build/ToolInfo~partial.swiftmodule",
+    "swift-dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/ArgumentParserToolInfo.build/ToolInfo.swiftdeps",
+    "diagnostics": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/ArgumentParserToolInfo.build/ToolInfo.dia"
+  }
+}

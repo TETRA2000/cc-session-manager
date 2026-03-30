@@ -1,7 +1,7 @@
 # Implementation Plan
 
-- [ ] 1. Server network binding and configuration
-- [ ] 1.1 Extend server config with host, token, and auth settings
+- [x] 1. Server network binding and configuration
+- [x] 1.1 Extend server config with host, token, and auth settings
   - Add `--host` and `--token` CLI flags to the argument parser in the entry point
   - Extend the application config type with `host`, `token`, and `authEnabled` fields
   - When `--host` is a non-localhost address, derive `authEnabled` as true
@@ -9,15 +9,15 @@
   - Default `--host` to `127.0.0.1` to preserve backward compatibility
   - _Requirements: 1.1, 1.2, 2.4, 2.5_
 
-- [ ] 1.2 Update server startup to bind on configured host
+- [x] 1.2 Update server startup to bind on configured host
   - Pass the configured host to the HTTP server binding instead of hardcoded `127.0.0.1`
   - Update the startup banner to display the bound host, port, and auth token (if enabled)
   - Detect and display LAN and Tailscale IP addresses when binding to `0.0.0.0`
   - Update Deno task definitions to allow broader network permissions when host is specified
   - _Requirements: 1.1, 1.3, 1.4_
 
-- [ ] 2. Authentication middleware
-- [ ] 2.1 Implement bearer token auth middleware for the API server
+- [x] 2. Authentication middleware
+- [x] 2.1 Implement bearer token auth middleware for the API server
   - Create a Hono middleware that intercepts all `/api/*` requests
   - Skip authentication entirely when `authEnabled` is false in config
   - Check `Authorization: Bearer <token>` header first, then fall back to `?token=<token>` query parameter
@@ -26,7 +26,7 @@
   - Register the middleware before all API route handlers
   - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6_
 
-- [ ] 2.2 Add auth middleware tests
+- [x] 2.2 Add auth middleware tests
   - Test that requests with a valid Bearer header pass through and receive a 200 response
   - Test that requests with a valid query parameter token pass through
   - Test that requests with an invalid or missing token receive a 401 response
@@ -66,15 +66,15 @@
   - Send `error` message and close the WebSocket on failures (spawn error, invalid session ID)
   - _Requirements: 5.1, 5.2, 5.3, 5.7, 5.8_
 
-- [ ] 5. Swift Package setup and shared models
-- [ ] 5.1 (P) Initialize Swift Package with multi-target structure
+- [x] 5. Swift Package setup and shared models
+- [x] 5.1 (P) Initialize Swift Package with multi-target structure
   - Create a `swift/` directory with a `Package.swift` defining three targets: `CCSessionAPI` (library), `CCSessionCLI` (executable), and test targets
   - Configure platform requirements: iOS 17+, macOS 14+ for Apple; Swift 5.9+ for Linux
   - Add SPM dependencies: `swift-argument-parser` for CLI, `SwiftTerm` for iOS terminal (Apple-only conditional dependency)
   - Ensure the library target uses only Foundation (no platform-specific imports) for cross-platform compilation
   - _Requirements: 3.1, 6.1_
 
-- [ ] 5.2 (P) Define shared Swift model types mirroring the server API
+- [x] 5.2 (P) Define shared Swift model types mirroring the server API
   - Create Codable/Sendable structs for all API response types: `DashboardStats`, `ProjectSummary`, `SessionSummary`, `TranscriptEntry`, `ToolCallEntry`, `TokenInfo`, `ProjectSettings`
   - Create wrapper response types: `DashboardResponse`, `ProjectsResponse`, `ProjectDetailResponse`, `TranscriptResponse`
   - Implement the `JSONValue` enum (string, number, bool, object, array, null) with full Codable support for dynamic tool call inputs
@@ -83,8 +83,8 @@
   - Define the `APIError` enum with cases for unauthorized, notFound, serverError, networkError, decodingError
   - _Requirements: 3.4, 3.6_
 
-- [ ] 6. Swift API client
-- [ ] 6.1 Implement the SessionClient with typed API methods
+- [x] 6. Swift API client
+- [x] 6.1 Implement the SessionClient with typed API methods
   - Create a `SessionClient` class conforming to `Sendable`, initialized with server URL and optional auth token
   - Implement a shared request builder that injects the Bearer token header and constructs endpoint URLs
   - Add typed async methods for each REST endpoint: dashboard, projects, project detail, project settings, transcript, launch, create project, update settings
@@ -92,7 +92,7 @@
   - On Linux, import `FoundationNetworking` via `#if canImport(FoundationNetworking)`
   - _Requirements: 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 6.2 Add Swift model and client tests
+- [x] 6.2 Add Swift model and client tests
   - Write decoding tests for each model type using sample JSON fixtures matching the server's actual response format
   - Test `JSONValue` encoding/decoding round-trips for all cases (string, number, bool, nested object, array, null)
   - Test `SessionClient` URL construction and header injection using a mock URL protocol

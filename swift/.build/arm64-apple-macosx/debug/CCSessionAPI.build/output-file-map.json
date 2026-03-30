@@ -1,0 +1,19 @@
+{
+  "": {
+    "swift-dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/primary.swiftdeps"
+  },
+  "/Users/takahiko/repo/cc-session-manager/swift/Sources/CCSessionAPI/Models.swift": {
+    "dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/Models.d",
+    "object": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/Models.swift.o",
+    "swiftmodule": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/Models.swiftdeps",
+    "diagnostics": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/Models.dia"
+  },
+  "/Users/takahiko/repo/cc-session-manager/swift/Sources/CCSessionAPI/SessionClient.swift": {
+    "dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/SessionClient.d",
+    "object": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/SessionClient.swift.o",
+    "swiftmodule": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/SessionClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/SessionClient.swiftdeps",
+    "diagnostics": "/Users/takahiko/repo/cc-session-manager/swift/.build/arm64-apple-macosx/debug/CCSessionAPI.build/SessionClient.dia"
+  }
+}

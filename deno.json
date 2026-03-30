@@ -16,7 +16,7 @@
     "dev": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --watch --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --allow-run=claude,osascript,open,git --deny-write=$HOME/.claude main.ts'",
     "start": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-run=claude,git,osascript,open --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --deny-write=$HOME/.claude main.ts'",
     "check": "deno check main.ts",
-    "test": "deno test --allow-read=$HOME/.claude,.,/var/folders --allow-env=HOME --allow-write=/var/folders --allow-run=git tests/"
+    "test": "deno test --allow-read=$HOME/.claude,.,/var/folders --allow-env=HOME,PROJECTS_ROOT --allow-write=/var/folders --allow-run=git tests/"
   },
   "fmt": {
     "lineWidth": 100,
