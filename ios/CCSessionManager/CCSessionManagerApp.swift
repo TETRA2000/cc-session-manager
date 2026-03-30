@@ -31,23 +31,12 @@ struct MainTabView: View {
                     Label("Projects", systemImage: "folder")
                 }
 
-            TerminalPlaceholderView()
-                .tabItem {
-                    Label("Terminal", systemImage: "terminal")
-                }
-        }
-    }
-}
-
-struct TerminalPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            ContentUnavailableView(
-                "Terminal",
-                systemImage: "terminal",
-                description: Text("Terminal access coming soon")
-            )
-            .navigationTitle("Terminal")
+            NavigationStack {
+                TerminalSessionView()
+            }
+            .tabItem {
+                Label("Terminal", systemImage: "terminal")
+            }
         }
     }
 }

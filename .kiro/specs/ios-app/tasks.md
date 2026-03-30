@@ -140,8 +140,8 @@
   - Show model name and token usage for assistant messages
   - _Requirements: 4.6_
 
-- [ ] 9. iOS app — terminal access
-- [ ] 9.1 Build the terminal emulator view using SwiftTerm
+- [x] 9. iOS app — terminal access
+- [x] 9.1 Build the terminal emulator view using SwiftTerm
   - Wrap SwiftTerm's `TerminalView` in a `UIViewRepresentable` for SwiftUI integration
   - Connect the terminal view to a WebSocket at `/api/terminal/ws` using `URLSessionWebSocketTask`
   - Implement the connection protocol: send `connect` message on open, store returned session ID for reconnection
@@ -150,7 +150,7 @@
   - Send `resize` messages when the terminal view's layout changes
   - _Requirements: 5.4, 5.5_
 
-- [ ] 9.2 Add terminal session launch and reconnection
+- [x] 9.2 Add terminal session launch and reconnection
   - When the user chooses to launch a Claude Code session (resume/continue/new), open the terminal view and send the appropriate `claude` command after PTY connection
   - Display a disconnection notice when the WebSocket closes unexpectedly
   - Implement automatic reconnection with exponential backoff (max 3 attempts) using the stored PTY session ID
@@ -167,14 +167,14 @@
   - On API errors (401, network), print a clear error message and exit with code 1
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-- [ ] 11. Integration testing and end-to-end validation
-- [ ] 11.1 Verify server backward compatibility
+- [x] 11. Integration testing and end-to-end validation
+- [x] 11.1 Verify server backward compatibility
   - Confirm that starting the server without `--host` or `--token` behaves identically to the current version (localhost-only, no auth)
   - Verify existing web frontend continues to work when auth is disabled
   - Run existing test suite and confirm all tests pass with the new changes
   - _Requirements: 1.2, 2.5_
 
-- [ ] 11.2 End-to-end validation across platforms
+- [x] 11.2 End-to-end validation across platforms
   - Start the server with `--host 0.0.0.0` and connect from the iOS app over LAN or Tailscale
   - Browse dashboard, projects, and transcripts from the iOS app
   - Open a terminal session from the iOS app and run a Claude Code session
