@@ -1,5 +1,7 @@
 # Claude Code Session Manager
 
+> ⚠️ **WARNING: THIS PROJECT IS EXPERIMENTAL AND HAS A LOT OF SECURITY RISKS. USE AT YOUR OWN RISK.** ⚠️
+
 A local GUI for browsing Claude Code session history, managing projects, and launching sessions.
 
 Built with Deno — reads your `~/.claude/` data read-only and serves a web UI at `127.0.0.1:3456`.
