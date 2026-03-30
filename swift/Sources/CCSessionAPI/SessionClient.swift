@@ -103,9 +103,15 @@ public final class SessionClient: Sendable {
         return try decode(data, path: path)
     }
 
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        let delegate = InsecureSessionDelegate()
+        return URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+    }()
+
     private func performRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
         do {
-            return try await URLSession.shared.data(for: request)
+            return try await Self.session.data(for: request)
         } catch {
             log("Network error: \(error)")
             throw APIError.networkError(error)
@@ -149,4 +155,19 @@ private struct OkResponse: Decodable {
 
 private struct ErrorBody: Decodable {
     let error: String?
+}
+
+/// Allows plain HTTP connections by accepting all server trust challenges.
+/// Used for local/Tailscale servers that don't have TLS certificates.
+private final class InsecureSessionDelegate: NSObject, URLSessionDelegate, Sendable {
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge
+    ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let trust = challenge.protectionSpace.serverTrust {
+            return (.useCredential, URLCredential(trust: trust))
+        }
+        return (.performDefaultHandling, nil)
+    }
 }
