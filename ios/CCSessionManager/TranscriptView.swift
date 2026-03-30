@@ -20,6 +20,17 @@ struct TranscriptView: View {
         }
         .navigationTitle(meta?.aiSummary?.prefix(40).description ?? "Transcript")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let webUrl = meta?.webUrl, let url = URL(string: webUrl) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        UIApplication.shared.open(url)
+                    } label: {
+                        Label("Open in Web", systemImage: "globe")
+                    }
+                }
+            }
+        }
         .refreshable { await loadTranscript() }
         .task {
             if let previewData { meta = previewData.meta; entries = previewData.entries; return }
