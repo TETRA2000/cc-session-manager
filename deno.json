@@ -15,7 +15,9 @@
   },
   "tasks": {
     "dev": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --watch --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --allow-run=claude,osascript,open,git --deny-write=$HOME/.claude main.ts'",
+    "dev:network": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --watch --allow-read=$HOME/.claude,$PR,. --allow-write=$PR,$HOME/Library/Caches/deno --allow-net --allow-env=HOME,PROJECTS_ROOT --allow-run=claude,osascript,open,git --allow-ffi --deny-write=$HOME/.claude main.ts --host 0.0.0.0 \"$@\"' --",
     "start": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --allow-read=$HOME/.claude,$PR,. --allow-write=$PR --allow-run=claude,git,osascript,open --allow-net=127.0.0.1:3456 --allow-env=HOME,PROJECTS_ROOT --deny-write=$HOME/.claude main.ts'",
+    "start:network": "sh -c 'PR=${PROJECTS_ROOT:-$HOME/Projects} && deno run --allow-read=$HOME/.claude,$PR,. --allow-write=$PR,$HOME/Library/Caches/deno --allow-run=claude,git,osascript,open --allow-net --allow-env=HOME,PROJECTS_ROOT --allow-ffi --deny-write=$HOME/.claude main.ts --host 0.0.0.0 \"$@\"' --",
     "check": "deno check main.ts",
     "test": "deno test --allow-read=$HOME/.claude,.,/var/folders --allow-env=HOME,PROJECTS_ROOT --allow-write=/var/folders --allow-run=git --ignore=tests/pty-manager.test.ts tests/",
     "test:pty": "deno test --allow-all tests/pty-manager.test.ts",

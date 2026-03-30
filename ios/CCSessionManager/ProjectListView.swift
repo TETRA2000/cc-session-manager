@@ -6,6 +6,7 @@ struct ProjectListView: View {
     @State private var projects: [ProjectSummary] = []
     @State private var searchText = ""
     @State private var error: String?
+    var previewProjects: [ProjectSummary]?
 
     private var filteredProjects: [ProjectSummary] {
         if searchText.isEmpty { return projects }
@@ -38,7 +39,10 @@ struct ProjectListView: View {
                 ProjectDetailView(projectId: projectId)
             }
             .refreshable { await loadProjects() }
-            .task { await loadProjects() }
+            .task {
+                if let previewProjects { projects = previewProjects; return }
+                await loadProjects()
+            }
             .overlay {
                 if let error {
                     ContentUnavailableView(
@@ -69,6 +73,7 @@ struct ProjectDetailView: View {
     @State private var project: ProjectSummary?
     @State private var sessions: [SessionSummary] = []
     @State private var error: String?
+    var previewDetail: ProjectDetailResponse?
 
     var body: some View {
         List(sessions) { session in
@@ -81,7 +86,10 @@ struct ProjectDetailView: View {
             TranscriptView(sessionId: sessionId)
         }
         .refreshable { await loadProject() }
-        .task { await loadProject() }
+        .task {
+            if let previewDetail { project = previewDetail.project; sessions = previewDetail.sessions; return }
+            await loadProject()
+        }
         .overlay {
             if let error {
                 ContentUnavailableView(
@@ -103,5 +111,20 @@ struct ProjectDetailView: View {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+}
+
+#Preview("Project List") {
+    ProjectListView(previewProjects: MockData.sampleProjects)
+        .environment(AppState.preview)
+}
+
+#Preview("Project Detail") {
+    NavigationStack {
+        ProjectDetailView(
+            projectId: "test",
+            previewDetail: MockData.projectDetailResponse
+        )
+        .environment(AppState.preview)
     }
 }

@@ -7,6 +7,7 @@ struct TranscriptView: View {
     @State private var meta: SessionSummary?
     @State private var entries: [TranscriptEntry] = []
     @State private var error: String?
+    var previewData: TranscriptResponse?
 
     var body: some View {
         ScrollView {
@@ -20,7 +21,10 @@ struct TranscriptView: View {
         .navigationTitle(meta?.aiSummary?.prefix(40).description ?? "Transcript")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await loadTranscript() }
-        .task { await loadTranscript() }
+        .task {
+            if let previewData { meta = previewData.meta; entries = previewData.entries; return }
+            await loadTranscript()
+        }
         .overlay {
             if let error {
                 ContentUnavailableView(
@@ -164,4 +168,24 @@ struct ToolCallView: View {
         case .object(let o): return "{\(o.count) keys}"
         }
     }
+}
+
+#Preview("Transcript") {
+    NavigationStack {
+        TranscriptView(
+            sessionId: "test",
+            previewData: MockData.transcriptResponse
+        )
+        .environment(AppState.preview)
+    }
+}
+
+#Preview("Transcript Entry - User") {
+    TranscriptEntryView(entry: MockData.sampleTranscript[0])
+        .padding()
+}
+
+#Preview("Transcript Entry - Assistant with Tools") {
+    TranscriptEntryView(entry: MockData.sampleTranscript[1])
+        .padding()
 }

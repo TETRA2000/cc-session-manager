@@ -54,3 +54,15 @@ struct ConnectionView: View {
         }
     }
 }
+
+#Preview {
+    ConnectionView()
+        .environment(AppState())
+}
+
+#Preview("With Error") {
+    let state = AppState()
+    state.connectionError = "Connection refused: server unreachable"
+    return ConnectionView()
+        .environment(state)
+}

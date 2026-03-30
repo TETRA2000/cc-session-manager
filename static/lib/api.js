@@ -1,5 +1,14 @@
+// Extract auth token from page URL query param (set when using --host with auth)
+const _authToken = new URLSearchParams(window.location.search).get("token");
+
+function _authHeaders() {
+  const headers = {};
+  if (_authToken) headers["Authorization"] = `Bearer ${_authToken}`;
+  return headers;
+}
+
 async function fetchJSON(url) {
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: _authHeaders() });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -25,7 +34,7 @@ export async function getTranscript(sessionId) {
 export async function launchSession({ mode, projectId, projectPath, sessionId, prompt, target, webUrl }) {
   const res = await fetch("/api/launch", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { ..._authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ mode, projectId, projectPath, sessionId, prompt, target, webUrl }),
   });
   const data = await res.json();
@@ -36,7 +45,7 @@ export async function launchSession({ mode, projectId, projectPath, sessionId, p
 export async function createProject(req) {
   const res = await fetch("/api/projects/create", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { ..._authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
   const data = await res.json();
@@ -45,7 +54,7 @@ export async function createProject(req) {
 }
 
 export async function getProjectSettings(projectId) {
-  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/settings`);
+  const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/settings`, { headers: _authHeaders() });
   if (!res.ok) throw new Error("Failed to load settings");
   return res.json();
 }
@@ -53,7 +62,7 @@ export async function getProjectSettings(projectId) {
 export async function updateProjectSettings(projectId, settings) {
   const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/settings`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { ..._authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(settings),
   });
   const data = await res.json();

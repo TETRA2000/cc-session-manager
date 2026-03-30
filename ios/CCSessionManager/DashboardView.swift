@@ -6,6 +6,7 @@ struct DashboardView: View {
     @State private var dashboard: DashboardResponse?
     @State private var error: String?
     @State private var isLoading = false
+    var previewData: DashboardResponse?
 
     var body: some View {
         NavigationStack {
@@ -46,7 +47,10 @@ struct DashboardView: View {
                 }
             }
             .refreshable { await loadDashboard() }
-            .task { await loadDashboard() }
+            .task {
+                if let previewData { dashboard = previewData; return }
+                await loadDashboard()
+            }
         }
     }
 
@@ -127,5 +131,18 @@ struct SessionRowView: View {
             .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
+    }
+}
+
+#Preview("Dashboard") {
+    DashboardView(previewData: MockData.dashboardResponse)
+        .environment(AppState.preview)
+}
+
+#Preview("Session Row - Active") {
+    List {
+        SessionRowView(session: MockData.sampleSessions[0])
+        SessionRowView(session: MockData.sampleSessions[1])
+        SessionRowView(session: MockData.sampleSessions[2])
     }
 }
