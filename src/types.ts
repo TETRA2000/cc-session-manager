@@ -198,6 +198,9 @@ export interface AppConfig {
   claudeHome: string;
   port: number;
   projectsRoot: string;
+  host: string;
+  token: string | null;
+  authEnabled: boolean;
 }
 
 // ─── Project wizard types ───

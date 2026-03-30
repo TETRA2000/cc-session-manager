@@ -5,6 +5,9 @@ const config = {
   claudeHome: Deno.env.get("HOME") + "/.claude",
   port: 0,
   projectsRoot: Deno.env.get("HOME") + "/Projects",
+  host: "127.0.0.1",
+  token: null,
+  authEnabled: false,
 };
 
 const app = createApp(config);

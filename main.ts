@@ -1,10 +1,10 @@
 import { parseArgs } from "@std/cli";
 import { join } from "@std/path";
 import { loadConfig } from "./src/config.ts";
-import { createApp } from "./src/server.ts";
+import { createApp, createAppWithTerminal } from "./src/server.ts";
 
 const args = parseArgs(Deno.args, {
-  string: ["port", "claude-home", "projects-root"],
+  string: ["port", "claude-home", "projects-root", "host", "token"],
   boolean: ["no-open", "help"],
   default: {
     "no-open": false,
@@ -21,6 +21,8 @@ Usage:
 
 Options:
   --port <number>        Port to listen on (default: 3456)
+  --host <address>       Host to bind to (default: 127.0.0.1)
+  --token <string>       Auth token (auto-generated if --host is non-localhost)
   --claude-home <path>   Path to Claude home directory (default: ~/.claude)
   --projects-root <path> Root directory for new projects (default: ~/Projects)
   --no-open              Don't open browser automatically
@@ -33,6 +35,8 @@ const config = loadConfig({
   port: args.port ? parseInt(args.port, 10) : undefined,
   claudeHome: args["claude-home"] ?? undefined,
   projectsRoot: args["projects-root"] ?? undefined,
+  host: args.host ?? undefined,
+  token: args.token ?? undefined,
 });
 
 // Ensure .session-manager directory exists for project settings
@@ -54,14 +58,18 @@ try {
   Deno.exit(1);
 }
 
-const app = createApp(config);
-const url = `http://127.0.0.1:${config.port}`;
+const app = config.authEnabled ? await createAppWithTerminal(config) : createApp(config);
+const url = `http://${config.host}:${config.port}`;
 
 console.log("");
 console.log("  Claude Code Session Manager");
 console.log("  ===========================");
 console.log(`  Local:  ${url}`);
 console.log(`  Data:   ${config.claudeHome}/projects/`);
+if (config.authEnabled && config.token) {
+  console.log(`  Auth:   Bearer ${config.token}`);
+  console.log(`  URL:    ${url}/?token=${config.token}`);
+}
 console.log("");
 
 // Open browser unless --no-open
@@ -77,7 +85,7 @@ if (!args["no-open"]) {
 Deno.serve(
   {
     port: config.port,
-    hostname: "127.0.0.1",
+    hostname: config.host,
     onListen: () => {
       // Startup message already printed above
     },
