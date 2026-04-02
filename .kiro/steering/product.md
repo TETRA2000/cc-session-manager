@@ -8,6 +8,9 @@ A local web GUI for browsing, searching, and managing Claude Code session histor
 2. **Session launching** — Resume or continue sessions in Terminal.app; open remote sessions via web URL detected from `bridge_status` messages.
 3. **Project management** — Create new projects with git init, CLAUDE.md, and .mcp.json templates; manage per-project display names, tags, model preferences, and launch flags.
 4. **Live status** — Detect active sessions from PID files, show ACTIVE/REMOTE badges, surface web session URLs from `/remote-control`.
+5. **Web terminal** — WebSocket-based PTY sessions via FFI (`@sigma/pty-ffi`), enabling in-browser terminal access when running in network mode.
+6. **Network access & auth** — Configurable `--host 0.0.0.0` mode for LAN/Tailscale access with auto-generated Bearer token authentication; localhost remains unauthenticated.
+7. **iOS companion app** — Native Swift client (`swift/`) using SwiftTerm for terminal rendering and the same REST/WebSocket API.
 
 ## Target Use Cases
 
@@ -22,4 +25,5 @@ Claude Code stores rich session data in local JSONL files, but provides no built
 ## Roadmap Context
 
 - Phases 1-3 (core reader, launcher, wizard) are complete.
+- Network mode, auth, PTY/terminal, and iOS companion app have shipped.
 - Phase 4 (live updates, SSE, activity heatmap) and Phase 5 (keyboard shortcuts, theme toggle, HTML export) are planned but not started.

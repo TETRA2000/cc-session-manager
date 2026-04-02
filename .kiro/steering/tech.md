@@ -17,11 +17,12 @@ Local client-server SPA. A Deno backend serves a REST API and static frontend fi
 
 | Library | Source | Purpose |
 |---------|--------|---------|
-| Hono | JSR | HTTP routing, static file serving, middleware |
+| Hono | JSR | HTTP routing, static file serving, middleware, WebSocket upgrade |
 | `@std/path` | JSR | Path joining/resolution |
 | `@std/streams` | JSR | Streaming JSONL line-by-line |
 | `@std/cli` | JSR | CLI argument parsing |
 | `@std/assert` | JSR | Test assertions |
+| `@sigma/pty-ffi` | JSR | FFI-based PTY for web terminal sessions |
 | Preact + HTM | CDN (esm.sh) | Frontend component rendering via tagged templates |
 | `@preact/signals` | CDN (esm.sh) | Reactive state management |
 
@@ -49,10 +50,14 @@ Local client-server SPA. A Deno backend serves a REST API and static frontend fi
 
 ### Common Commands
 ```bash
-deno task dev    # Dev server with --watch (port 3456)
-deno task start  # Production server
-deno task test   # Run unit tests
-deno task check  # TypeScript type check
+deno task dev          # Dev server with --watch (localhost:3456)
+deno task dev:network  # Dev server accessible over LAN (0.0.0.0, with auth + FFI)
+deno task start        # Production server (localhost)
+deno task start:network # Production server over LAN (0.0.0.0, with auth + FFI)
+deno task test         # Run unit tests (excludes PTY tests)
+deno task test:pty     # Run PTY-specific tests (requires --allow-all)
+deno task test:all     # Run all tests
+deno task check        # TypeScript type check
 ```
 
 ## Key Technical Decisions
@@ -63,3 +68,6 @@ deno task check  # TypeScript type check
 4. **`--deny-write=$HOME/.claude`** — Runtime permission flag ensures session data is never modified, even accidentally.
 5. **AI summaries via Haiku** — Summarizes sessions using Anthropic SDK with Haiku model; gracefully degrades when `ANTHROPIC_API_KEY` is not set.
 6. **Hash-based SPA routing** — Frontend uses `window.location.hash` for routing; no server-side routing needed beyond the SPA fallback.
+7. **Network mode with auto-auth** — `--host 0.0.0.0` enables LAN/Tailscale access; auth is auto-enabled (Bearer token) for non-localhost, disabled for localhost. Timing-safe token comparison.
+8. **FFI-based PTY** — `@sigma/pty-ffi` provides native PTY support for web terminal; dynamically imported only in network mode to avoid FFI permission requirements in localhost mode.
+9. **iOS companion via Swift** — Native SwiftUI + SwiftTerm app consumes the same REST API and WebSocket terminal endpoint.

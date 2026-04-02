@@ -8,17 +8,17 @@ Layered architecture with clear backend/frontend separation. Backend follows a *
 
 ### Backend entry (`main.ts`, `src/server.ts`, `src/config.ts`)
 **Purpose**: Application bootstrap — CLI parsing, config loading, Hono app creation, `Deno.serve` startup.
-**Pattern**: `main.ts` is the entry point; `server.ts` wires routes and static serving; `config.ts` resolves CLI args and env vars into `AppConfig`.
+**Pattern**: `main.ts` is the entry point; `server.ts` wires routes, auth middleware, and static serving; `config.ts` resolves CLI args and env vars into `AppConfig` (including host, auth token, network mode detection).
 
 ### Routes (`src/routes/`)
 **Purpose**: HTTP request handling — parse params, call services, return JSON responses.
-**Pattern**: Each file exports a factory function `xxxRoutes(config: AppConfig): Hono` that returns a Hono sub-app. All route sub-apps are mounted in `api.ts`.
-**Example**: `dashboardRoutes(config)` → `GET /api/dashboard`
+**Pattern**: Each file exports a factory function `xxxRoutes(config: AppConfig): Hono` that returns a Hono sub-app. All route sub-apps are mounted in `api.ts`. Terminal routes are dynamically imported only in network mode.
+**Example**: `dashboardRoutes(config)` → `GET /api/dashboard`, `terminalRoutes(config, ptyManager)` → WebSocket at `/api/terminal/ws`
 
 ### Services (`src/services/`)
-**Purpose**: Business logic — data parsing, discovery, launching, summarization.
-**Pattern**: Pure functions and async helpers. No HTTP concerns. Services receive config or paths as parameters, not Hono context.
-**Example**: `session-parser.ts` exports `parseSessionMetadata()`, `parseTranscript()`, `getSessionFiles()`
+**Purpose**: Business logic — data parsing, discovery, launching, summarization, auth, PTY management.
+**Pattern**: Pure functions and async helpers. No HTTP concerns. Services receive config or paths as parameters, not Hono context. Stateful services (e.g., `PTYManager`) are instantiated once and passed to route factories.
+**Example**: `session-parser.ts` exports `parseSessionMetadata()`, `parseTranscript()`, `getSessionFiles()`; `auth.ts` exports `authMiddleware()` and `timingSafeEqual()`
 
 ### Types (`src/types.ts`)
 **Purpose**: All TypeScript interfaces in one file — raw JSONL types, API response types, config, request/result types.
@@ -39,7 +39,11 @@ Layered architecture with clear backend/frontend separation. Backend follows a *
 
 ### Tests (`tests/`)
 **Purpose**: Unit and integration tests.
-**Pattern**: `<service-name>.test.ts` mirrors service files. `api.test.ts` covers route integration. `fixtures/` holds test JSONL data.
+**Pattern**: `<service-name>.test.ts` mirrors service files. `api.test.ts` covers route integration. `fixtures/` holds test JSONL data. PTY tests run separately via `deno task test:pty` (requires `--allow-all`).
+
+### iOS app (`swift/`)
+**Purpose**: Native iOS companion app consuming the same Deno backend API.
+**Pattern**: Swift Package with SwiftUI views and SwiftTerm for in-app terminal. Communicates via REST (sessions, projects) and WebSocket (terminal PTY).
 
 ## Naming Conventions
 
