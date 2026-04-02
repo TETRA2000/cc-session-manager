@@ -4,7 +4,10 @@
 
 ## User settings
 **/xcuserdata/
-**/xcshareddata/
+**/xcshareddata/*
+!**/xcshareddata/swiftpm/
+**/xcshareddata/swiftpm/*
+!**/xcshareddata/swiftpm/Package.resolved
 
 ## Obj-C/Swift specific
 *.hmap
