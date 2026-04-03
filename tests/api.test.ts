@@ -8,6 +8,8 @@ const config = {
   host: "127.0.0.1",
   token: null,
   authEnabled: false,
+  defaultSandboxStrategy: "none" as const,
+  insideContainer: false,
 };
 
 const app = createApp(config);

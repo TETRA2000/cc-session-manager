@@ -11,6 +11,8 @@ function makeConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     host: "127.0.0.1",
     token: null,
     authEnabled: false,
+    defaultSandboxStrategy: "none",
+    insideContainer: false,
     ...overrides,
   };
 }

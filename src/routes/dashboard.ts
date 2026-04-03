@@ -74,6 +74,7 @@ export function dashboardRoutes(config: AppConfig): Hono {
       sessions: allFiles.length,
       active7d,
       tokens30d,
+      activeSandboxes: 0,
     };
 
     return c.json({ stats, recentSessions });
