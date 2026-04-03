@@ -4,7 +4,7 @@ import { loadConfig } from "./src/config.ts";
 import { createApp, createAppWithTerminal } from "./src/server.ts";
 
 const args = parseArgs(Deno.args, {
-  string: ["port", "claude-home", "projects-root", "host", "token"],
+  string: ["port", "claude-home", "projects-root", "host", "token", "sandbox-strategy"],
   boolean: ["no-open", "help"],
   default: {
     "no-open": false,
@@ -25,6 +25,7 @@ Options:
   --token <string>       Auth token (auto-generated if --host is non-localhost)
   --claude-home <path>   Path to Claude home directory (default: ~/.claude)
   --projects-root <path> Root directory for new projects (default: ~/Projects)
+  --sandbox-strategy <s> Default sandbox strategy: none, native, sbx (default: none)
   --no-open              Don't open browser automatically
   --help                 Show this help message
 `);
@@ -37,6 +38,7 @@ const config = loadConfig({
   projectsRoot: args["projects-root"] ?? undefined,
   host: args.host ?? undefined,
   token: args.token ?? undefined,
+  sandboxStrategy: args["sandbox-strategy"] ?? undefined,
 });
 
 // Ensure .session-manager directory exists for project settings

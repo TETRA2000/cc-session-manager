@@ -1,14 +1,24 @@
 import { html } from "htm/preact";
+import { useEffect, useState } from "preact/hooks";
 import { route, Link, navigate } from "../lib/router.js";
+import { getSandboxStrategies } from "../lib/api.js";
 
 export function Header() {
   const currentPath = route.value.path;
+  const [insideContainer, setInsideContainer] = useState(false);
+
+  useEffect(() => {
+    getSandboxStrategies()
+      .then((data) => setInsideContainer(data.insideContainer || false))
+      .catch(() => {});
+  }, []);
 
   return html`
     <div class="header">
       <${Link} href="/" class="logo" style="text-decoration:none">
         <div class="logo-dot"></div>
         <span class="logo-text">CLAUDE SESSION MANAGER</span>
+        ${insideContainer && html`<span class="badge badge-sandbox" title="Running inside container">SANDBOXED</span>`}
       <//>
       <div class="header-actions">
         <${Link}

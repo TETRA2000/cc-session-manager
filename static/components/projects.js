@@ -1,6 +1,6 @@
 import { html } from "htm/preact";
 import { useState, useEffect } from "preact/hooks";
-import { getProjects, getProject, launchSession, getProjectSettings, updateProjectSettings } from "../lib/api.js";
+import { getProjects, getProject, launchSession, getProjectSettings, updateProjectSettings, getSandboxForProject } from "../lib/api.js";
 import { shortenPath } from "../lib/format.js";
 import { SessionRow } from "./session-row.js";
 import { TranscriptPanel } from "./transcript.js";
@@ -83,6 +83,13 @@ function ProjectGroup({ project, onSelectSession, selectedSessionId }) {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTags, setSettingsTags] = useState(null);
+  const [sandboxStatus, setSandboxStatus] = useState(null);
+
+  useEffect(() => {
+    getSandboxForProject(project.id)
+      .then((data) => setSandboxStatus(data.instance))
+      .catch(() => {});
+  }, [project.id]);
 
   const toggle = () => {
     const next = !expanded;
@@ -136,6 +143,12 @@ function ProjectGroup({ project, onSelectSession, selectedSessionId }) {
           <div class="project-icon">${"\u25C6"}</div>
           <span class="project-name">
             ${project.displayName}
+            ${sandboxStatus && sandboxStatus.status === "running" && html`
+              <span class=${`badge-tag badge-${sandboxStatus.strategy}`}
+                    title=${`Sandbox: ${sandboxStatus.strategy} (${sandboxStatus.status})`}>
+                ${sandboxStatus.strategy === "sbx" ? "SBX" : "NATIVE"}
+              </span>
+            `}
             ${settingsTags && settingsTags.map(
               (t) => html`<span class="badge-tag" key=${t}>${t}</span>`
             )}

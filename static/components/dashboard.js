@@ -42,6 +42,7 @@ export function DashboardView() {
           <${StatCard} label="SESSIONS" value=${stats.sessions || 0} />
           <${StatCard} label="ACTIVE (7D)" value=${stats.active7d || 0} color="green" />
           <${StatCard} label="TOKENS (30D)" value=${formatTokens(stats.tokens30d || 0)} />
+          ${stats.activeSandboxes > 0 && html`<${StatCard} label="SANDBOXES" value=${stats.activeSandboxes} color="purple" />`}
         </div>
 
         <div class="section-title">RECENT SESSIONS</div>

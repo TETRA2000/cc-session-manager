@@ -13,17 +13,19 @@ A Deno-based local web app for browsing and managing Claude Code session history
 ## Commands
 
 ```bash
-deno task dev    # Dev server with --watch (port 3456)
-deno task start  # Production server
-deno task test   # Run unit tests
-deno task check  # TypeScript type check
+deno task dev          # Dev server with --watch (port 3456)
+deno task dev:sandbox  # Dev server with sandbox support (sbx CLI enabled)
+deno task start        # Production server
+deno task start:sandbox # Production server with sandbox support
+deno task test         # Run unit and E2E tests
+deno task check        # TypeScript type check
 ```
 
 ## Architecture
 
 - `main.ts` — Entry point, CLI arg parsing, Deno.serve
-- `src/routes/` — Hono route handlers (dashboard, projects, sessions, launcher)
-- `src/services/` — Business logic (session-parser, project-discovery, session-launcher)
+- `src/routes/` — Hono route handlers (dashboard, projects, sessions, launcher, sandbox)
+- `src/services/` — Business logic (session-parser, project-discovery, session-launcher, sandbox-manager, sbx-backend, native-backend, dependency-checker, sandbox-naming)
 - `src/types.ts` — All TypeScript interfaces
 - `static/` — Frontend SPA (Preact+HTM, served as static files)
 - `static/components/` — Preact components (htm tagged templates)
@@ -43,6 +45,14 @@ deno task check  # TypeScript type check
 - AI summaries generated via Anthropic SDK (Haiku), cached in `$PROJECTS_ROOT/.session-manager/summaries.json`
 - Summary cache keyed by sessionId + messageCount — regenerated only when session has new messages
 - Gracefully degrades when `ANTHROPIC_API_KEY` is not set (shows basic first-message summary)
+- Sandbox strategies: `none` (default), `sbx` (Docker Sandbox VM), `native` (Claude Code Seatbelt/bubblewrap)
+- `SbxBackend` wraps `sbx` CLI (create/ls/stop/rm/exec) via `Deno.Command`; command path is configurable for testing
+- Sandbox names are deterministic: `ccsm-<sha256-first12>` of projectId (fixed 17-char length)
+- Hint cache at `$PROJECTS_ROOT/.session-manager/sandboxes.json` maps sandbox names to projectIds for reverse lookup
+- `sbx ls` outputs tabular text (no JSON flag); parsed by column positions from header row
+- Sandboxed session data read via `sbx exec <name> -- cat <path>` with piped stdout streamed into existing JSONL parser
+- Credential management delegated to Docker Sandbox's host-side proxy (`sbx secret`); session manager has zero credential code
+- `CCSM_INSIDE_CONTAINER=1` env var detected for whole-app sandbox mode indicator
 
 ## Testing Requirements
 
@@ -59,6 +69,10 @@ Tests live in `tests/` and use `@std/assert`. Test files:
 | `summary-service.test.ts` | Summary cache lookup, staleness detection, persistence |
 | `api.test.ts` | HTTP route integration (dashboard, projects, sessions, launch, static files) |
 | `format.test.ts` | Frontend format utilities (tokens, paths, truncation) |
+| `sandbox-naming.test.ts` | Deterministic SHA-256 naming, hint cache CRUD, reconciliation |
+| `sbx-backend.test.ts` | sbx ls tabular output parsing, launch command generation |
+| `sbx-e2e.test.ts` | Backend E2E via mock-sbx: lifecycle, dependency checker, manager orchestration |
+| `sandbox-routes-e2e.test.ts` | Route E2E via mock-sbx: CRUD endpoints, exec, validation, error cases |
 
 When adding a new feature, add tests for:
 - **Services**: Unit tests for pure functions and data extraction logic

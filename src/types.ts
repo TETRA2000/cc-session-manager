@@ -164,6 +164,7 @@ export interface DashboardStats {
   sessions: number;
   active7d: number;
   tokens30d: number;
+  activeSandboxes: number;
 }
 
 export interface SessionFileInfo {
@@ -201,6 +202,8 @@ export interface AppConfig {
   host: string;
   token: string | null;
   authEnabled: boolean;
+  defaultSandboxStrategy: SandboxStrategy;
+  insideContainer: boolean;
 }
 
 // ─── Project wizard types ───
@@ -225,6 +228,7 @@ export interface ProjectSettings {
   tags?: string[];
   preferredModel?: string;
   customLaunchFlags?: string[];
+  sandbox?: SandboxConfig;
 }
 
 // ─── Summary cache types ───
@@ -247,9 +251,68 @@ export interface LaunchRequest {
   prompt?: string;
   target: LaunchTarget;
   webUrl?: string;
+  sandbox?: SandboxStrategy;
 }
 
 export interface LaunchResult {
   ok: boolean;
   error?: string;
+}
+
+// ─── Sandbox types ───
+
+export type SandboxStrategy = "none" | "native" | "sbx";
+
+export type SandboxStatus = "running" | "stopped" | "not-found";
+
+export type NetworkPolicy = "open" | "balanced" | "restricted";
+
+export interface SandboxConfig {
+  strategy: SandboxStrategy;
+  networkPolicy: NetworkPolicy;
+  extraMounts: string[];
+  ephemeral: boolean;
+}
+
+export interface SandboxInstance {
+  name: string;
+  projectId: string;
+  strategy: SandboxStrategy;
+  status: SandboxStatus;
+  info: string | null;
+}
+
+export interface StrategyAvailability {
+  strategy: SandboxStrategy;
+  available: boolean;
+  version: string | null;
+  installHint: string | null;
+  credentialsConfigured?: boolean;
+}
+
+export interface LaunchCommand {
+  command: string;
+  args: string[];
+  cwd: string | null;
+  env: Record<string, string>;
+}
+
+export interface SandboxResult<T = void> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+  errorCode?: SandboxErrorCode;
+}
+
+export type SandboxErrorCode =
+  | "DEPENDENCY_MISSING"
+  | "BACKEND_ERROR"
+  | "SANDBOX_EXISTS"
+  | "SANDBOX_NOT_FOUND"
+  | "EXEC_FAILED";
+
+export interface SandboxHintCacheEntry {
+  projectId: string;
+  projectPath: string;
+  createdAt: string;
 }

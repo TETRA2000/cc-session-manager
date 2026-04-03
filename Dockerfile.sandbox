@@ -1,0 +1,21 @@
+FROM denoland/deno:2.0.0
+
+# Install Claude Code
+RUN deno install -g npm:@anthropic-ai/claude-code
+
+WORKDIR /app
+COPY . .
+
+# Cache dependencies
+RUN deno cache main.ts
+
+EXPOSE 3456
+
+# Mark as running inside a container
+ENV CCSM_INSIDE_CONTAINER=1
+
+# Run in network mode (0.0.0.0) with auth enabled
+# Mount volumes when running:
+#   -v ~/.claude:/home/deno/.claude:ro
+#   -v ~/Projects:/home/deno/Projects
+CMD ["deno", "task", "start:network", "--host", "0.0.0.0"]
