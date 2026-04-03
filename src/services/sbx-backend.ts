@@ -80,7 +80,13 @@ export class SbxBackend {
     config: SandboxConfig,
   ): Promise<SandboxResult<SandboxInstance>> {
     const name = await sandboxNameForProject(projectId);
-    const args = ["create", "--name", name, "claude", projectPath];
+    const args = ["create", "--name", name];
+
+    if (config.networkPolicy && config.networkPolicy !== "balanced") {
+      args.push("--network-policy", config.networkPolicy);
+    }
+
+    args.push("claude", projectPath);
 
     for (const mount of config.extraMounts) {
       args.push(`${mount}:ro`);

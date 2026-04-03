@@ -172,14 +172,57 @@ export async function extractSessionMetadata(
   };
 }
 
+// ─── Stream-based JSONL reader (for sandboxed session data via subprocess) ───
+
+export async function* readJsonlFromStream(
+  readable: ReadableStream<Uint8Array>,
+): AsyncGenerator<JournalLine> {
+  const textStream = readable.pipeThrough(new TextDecoderStream());
+  let buffer = "";
+  for await (const chunk of textStream) {
+    buffer += chunk;
+    const lines = buffer.split("\n");
+    buffer = lines.pop()!;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.length === 0) continue;
+      try {
+        yield JSON.parse(trimmed) as JournalLine;
+      } catch {
+        // Skip malformed lines
+      }
+    }
+  }
+  const trimmed = buffer.trim();
+  if (trimmed.length > 0) {
+    try {
+      yield JSON.parse(trimmed) as JournalLine;
+    } catch {
+      // Skip
+    }
+  }
+}
+
 // ─── Full transcript parser ───
 
+export async function parseTranscriptFromStream(
+  readable: ReadableStream<Uint8Array>,
+): Promise<TranscriptEntry[]> {
+  return parseTranscriptFromLines(readJsonlFromStream(readable));
+}
+
 export async function parseTranscript(filePath: string): Promise<TranscriptEntry[]> {
+  return parseTranscriptFromLines(readJsonlStream(filePath));
+}
+
+async function parseTranscriptFromLines(
+  lines: AsyncGenerator<JournalLine>,
+): Promise<TranscriptEntry[]> {
   const entries: TranscriptEntry[] = [];
   // Map tool_use id -> index in entries array + index in toolCalls array
   const pendingToolCalls = new Map<string, { entryIndex: number; toolIndex: number }>();
 
-  for await (const line of readJsonlStream(filePath)) {
+  for await (const line of lines) {
     // Filter out non-display types and isMeta
     if (!isDisplayable(line) || line.isMeta) continue;
 

@@ -69,3 +69,49 @@ export async function updateProjectSettings(projectId, settings) {
   if (!res.ok || !data.ok) throw new Error(data.error || "Save failed");
   return data;
 }
+
+// ─── Sandbox API ───
+
+export async function getSandboxStrategies() {
+  return fetchJSON("/api/sandbox/strategies");
+}
+
+export async function getSandboxInstances() {
+  return fetchJSON("/api/sandbox/instances");
+}
+
+export async function getSandboxForProject(projectId) {
+  return fetchJSON(`/api/sandbox/instances/${encodeURIComponent(projectId)}`);
+}
+
+export async function createSandbox({ projectId, projectPath, strategy, config }) {
+  const res = await fetch("/api/sandbox/instances", {
+    method: "POST",
+    headers: { ..._authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ projectId, projectPath, strategy, config }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error || "Create sandbox failed");
+  return data;
+}
+
+export async function stopSandbox(name) {
+  const res = await fetch(`/api/sandbox/instances/${encodeURIComponent(name)}/stop`, {
+    method: "POST",
+    headers: { ..._authHeaders(), "Content-Type": "application/json" },
+    body: "{}",
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error || "Stop sandbox failed");
+  return data;
+}
+
+export async function removeSandbox(name) {
+  const res = await fetch(`/api/sandbox/instances/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+    headers: _authHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error || "Remove sandbox failed");
+  return data;
+}

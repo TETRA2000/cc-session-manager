@@ -72,7 +72,7 @@
   - Wire up the dependency checker to validate strategy availability before sandbox creation
   - _Requirements: 1.1, 1.2, 1.5, 2.1, 2.2, 2.4, 6.1, 6.4, 6.5, 6.6_
 
-- [ ] 6.2 Implement sandboxed session data proxy
+- [x] 6.2 Implement sandboxed session data proxy
   - Extend the session data reading flow: when a project has an active sandbox (`sbx` strategy), use the backend's `stream()` method to read JSONL files from inside the sandbox instead of the host filesystem
   - Pipe the subprocess `ReadableStream` through `TextDecoderStream` and into the existing line-splitting JSONL parser to preserve streaming behavior
   - Discover session files inside the sandbox by running `sbx exec <name> -- ls ~/.claude/projects/` and parsing the directory listing
@@ -93,7 +93,7 @@
   - Mount the route under `/api/sandbox` in the API router
   - _Requirements: 6.1, 6.2, 6.4, 8.1, 8.3, 8.4_
 
-- [ ] 7.2 Extend session launch with sandbox support
+- [x] 7.2 Extend session launch with sandbox support
   - Modify the existing launch route to accept the optional `sandbox` field in the request body
   - When `sandbox` is set and not `"none"`, call `ensureSandbox()` on the sandbox manager before building the launch command
   - Use `getLaunchCommand()` from the sandbox instance to produce the PTY command (`sbx exec -it` or `claude --settings`) instead of the default terminal launch
@@ -101,15 +101,15 @@
   - For non-sandbox launches, preserve the existing Terminal.app / browser launch behavior unchanged
   - _Requirements: 2.1, 2.3, 8.3, 8.5_
 
-- [ ] 8. Credential status detection
-- [ ] 8.1 (P) Implement sbx secret status check
+- [x] 8. Credential status detection
+- [x] 8.1 (P) Implement sbx secret status check
   - Run `sbx secret ls` and parse the output to determine whether Anthropic credentials are configured
   - Expose credential status through the `GET /api/sandbox/strategies` endpoint as an additional field on the `sbx` strategy entry
   - When credentials are not configured, include setup instructions text: "Run `sbx secret set -g anthropic` to configure API key"
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 9. Frontend sandbox components
-- [ ] 9.1 (P) Implement sandbox settings form
+- [x] 9. Frontend sandbox components
+- [x] 9.1 (P) Implement sandbox settings form
   - Add a sandbox configuration section to the project settings view
   - Provide a strategy selector dropdown listing available strategies (fetched from `/api/sandbox/strategies`), showing unavailable options as disabled with install hints
   - Show network policy selector (open/balanced/restricted) when `sbx` strategy is selected
@@ -118,7 +118,7 @@
   - Display credential setup instructions when `sbx` is selected and credentials are not configured
   - _Requirements: 1.4, 1.5, 2.5, 3.2, 7.1, 7.2, 7.3_
 
-- [ ] 9.2 (P) Implement sandbox status badges and management panel
+- [x] 9.2 (P) Implement sandbox status badges and management panel
   - Add a sandbox badge component to each project row on the project list, showing a visual indicator (icon/label) when a sandbox is active, distinguished by strategy type
   - Clicking the badge opens a detail panel showing: strategy, status, network policy, and sandbox name
   - Add sandbox management controls to the project detail view: create, stop, and remove buttons that call the sandbox CRUD API
@@ -126,7 +126,7 @@
   - Add a sandbox count to the dashboard stats section
   - _Requirements: 8.1, 8.2, 8.4, 8.6, 10.1, 10.2, 10.3, 10.5_
 
-- [ ] 9.3 (P) Implement global sandbox indicator
+- [x] 9.3 (P) Implement global sandbox indicator
   - Detect the `insideContainer` flag from a new API endpoint or inline config and display a global badge in the application header when the entire app is running in a container
   - _Requirements: 9.4, 10.4_
 
@@ -160,7 +160,7 @@
   - Test `stream()` returns a `ReadableStream` that can be piped through the JSONL parser
   - _Requirements: 2.1, 2.4, 5.1, 8.3_
 
-- [ ] 12.3 Integration tests for sandbox API
+- [x] 12.3 Integration tests for sandbox API
   - Test sandbox CRUD endpoints via Hono `app.request()` with mocked sandbox manager
   - Test extended launch endpoint with sandbox parameter
   - Test strategy listing with mocked dependency checker

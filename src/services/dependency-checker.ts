@@ -112,13 +112,23 @@ export class DependencyChecker {
     const results: StrategyAvailability[] = [];
     for (const strategy of strategies) {
       const status = await this.check(strategy);
-      results.push({
+      const entry: StrategyAvailability = {
         strategy,
         available: status.available,
         version: status.version,
         installHint: status.installHint,
-      });
+      };
+      if (strategy === "sbx" && status.available) {
+        entry.credentialsConfigured = await this.checkSbxCredentials();
+      }
+      results.push(entry);
     }
     return results;
+  }
+
+  async checkSbxCredentials(): Promise<boolean> {
+    const result = await runCommand(this.sbxCommand, ["secret", "ls"]);
+    if (!result.ok) return false;
+    return result.stdout.toLowerCase().includes("anthropic");
   }
 }
