@@ -98,9 +98,11 @@ graph TB
 
 **Key architectural decisions**:
 - **Deno server on host**: Reads `~/.claude/projects/` directly for non-sandboxed session browsing. Only `sbx` is added to `--allow-run`.
-- **`sbx` as source of truth**: `sbx ls` provides live sandbox state — no need for `sandboxes.json` persistence. The session manager queries `sbx ls` on demand.
+- **`sbx ls` + hint cache**: `sbx ls` provides live sandbox state. Since `sbx ls` outputs human-readable tabular text (no JSON flag), the session manager parses columns by position and maintains a lightweight hint cache in `$PROJECTS_ROOT/.session-manager/sandboxes.json` mapping projectId → sandboxName. The cache is reconciled against `sbx ls` on startup and after lifecycle operations.
 - **PTY via `sbx exec`**: Terminal sessions run `sbx exec -it <name> <command>` as the PTY command, reusing existing WebSocket terminal infrastructure.
 - **Credential proxy**: Docker Sandbox's host-side proxy intercepts outbound API requests and injects credentials stored in OS keychain. Session manager has zero credential code.
+- **Sandbox naming**: ProjectIds are encoded directory paths (e.g., `-Users-takahiko-repo-my-app`) that can exceed Docker name limits. Sandbox names use a deterministic short form: `ccsm-<sha256-first12>` (12 hex chars of SHA-256 hash of projectId), stored in the hint cache for reverse lookup.
+- **Session data streaming via subprocess**: Sandboxed session JSONL is read by spawning `sbx exec <name> -- cat <path>` with `stdout: "piped"` and piping the subprocess `ReadableStream` into the existing `TextDecoderStream`-based JSONL parser. This preserves the streaming architecture for large files.
 
 ### Technology Stack
 
@@ -130,11 +132,11 @@ sequenceDiagram
     alt Sandbox exists
         SbxCLI-->>SandboxMgr: Found running sandbox
     else No sandbox
-        SandboxMgr->>SbxCLI: sbx create --name ccsm-<id> claude <path>
+        SandboxMgr->>SbxCLI: sbx create --name ccsm-<hash> claude <path>
         SbxCLI-->>SandboxMgr: Sandbox created
     end
     SandboxMgr-->>LaunchRoute: SandboxInstance
-    LaunchRoute->>PTYMgr: create("sbx", ["exec", "-it", "ccsm-<id>", "claude", ...args])
+    LaunchRoute->>PTYMgr: create("sbx", ["exec", "-it", "ccsm-<hash>", "claude", ...args])
     PTYMgr-->>User: WebSocket terminal stream
 ```
 
@@ -152,11 +154,11 @@ sequenceDiagram
     SessionRoute->>SandboxMgr: getSandbox(projectId)
     alt Has active sandbox
         SandboxMgr-->>SessionRoute: SandboxInstance
-        SessionRoute->>SbxCLI: sbx exec ccsm-<id> -- ls ~/.claude/projects/
+        SessionRoute->>SbxCLI: sbx exec ccsm-<hash> -- ls ~/.claude/projects/
         SbxCLI-->>SessionRoute: Session file list
-        SessionRoute->>SbxCLI: sbx exec ccsm-<id> -- cat <session.jsonl>
-        SbxCLI-->>SessionParser: JSONL data
-        SessionParser-->>User: Parsed sessions
+        SessionRoute->>SbxCLI: sbx exec ccsm-<hash> -- cat <session.jsonl> (stdout piped)
+        SbxCLI-->>SessionParser: Piped ReadableStream into TextDecoderStream JSONL parser
+        SessionParser-->>User: Parsed sessions (streamed)
     else No sandbox (or native)
         SessionRoute->>SessionParser: Read from host ~/.claude/projects/
         SessionParser-->>User: Parsed sessions
@@ -256,9 +258,10 @@ sequenceDiagram
 
 **Responsibilities & Constraints**
 - Creates, stops, and removes sandboxes via the appropriate backend adapter
-- Queries `sbx ls` for live sandbox state (no local state file needed — sbx is source of truth)
-- Resolves sandbox name from projectId using convention: `ccsm-<sanitized-projectId>`
-- Reads sandboxed session data via `sbx exec` when browsing projects with active sandboxes
+- Queries `sbx ls` for live sandbox state; maintains a lightweight hint cache (`sandboxes.json`) mapping projectId → sandboxName for reverse lookup
+- Resolves sandbox name from projectId using deterministic hash: `ccsm-<sha256-first12-of-projectId>`
+- Reads sandboxed session data via `sbx exec` with piped stdout, streaming into the existing JSONL parser
+- Reconciles hint cache against `sbx ls` on startup (removes entries for sandboxes no longer present)
 
 **Dependencies**
 - Inbound: SandboxRoute — CRUD (P0); session-launcher — ensureSandbox (P0); session routes — data proxy (P0)
@@ -276,6 +279,8 @@ interface SandboxManagerService {
   stopSandbox(sandboxName: string): Promise<SandboxResult>;
   removeSandbox(sandboxName: string): Promise<SandboxResult>;
   execInSandbox(sandboxName: string, command: string[]): Promise<SandboxResult<string>>;
+  streamFromSandbox(sandboxName: string, command: string[]): ReadableStream<Uint8Array>;
+  sandboxNameForProject(projectId: string): string;
   getLaunchCommand(instance: SandboxInstance, claudeArgs: string[]): LaunchCommand;
 }
 ```
@@ -339,8 +344,9 @@ interface SandboxBackend {
 - `create()`: `sbx create --name <name> claude <projectPath>` with optional extra workspaces as `:ro` mounts
 - `stop()`: `sbx stop <name>`
 - `remove()`: `sbx rm <name>`
-- `list()`: `sbx ls` — parse output for sandbox name, status, resource info
-- `exec()`: `sbx exec -it <name> <command>` — returns stdout
+- `list()`: `sbx ls` — parse tabular output by column positions (SANDBOX, AGENT, STATUS, PORTS, WORKSPACE columns). Columns are whitespace-separated with fixed headers.
+- `exec()`: `sbx exec <name> -- <command>` — captures stdout as string (use `-it` only for PTY/interactive commands)
+- `stream()`: `Deno.Command("sbx", { args: ["exec", name, "--", ...command], stdout: "piped" }).spawn()` — returns `stdout` as `ReadableStream<Uint8Array>` for piping into JSONL parser
 - `getLaunchCommand()`: returns `{ command: "sbx", args: ["exec", "-it", name, "claude", ...claudeArgs] }` — this is the PTY command
 
 **Implementation Notes — NativeBackend**
@@ -513,7 +519,17 @@ interface LaunchRequest {
 
 ### Physical Data Model
 
-**No `sandboxes.json` needed** — `sbx ls` is the live source of truth for sandbox state. Only `projects.json` is extended with `SandboxConfig` per project.
+**sandboxes.json** (hint cache at `$PROJECTS_ROOT/.session-manager/sandboxes.json`):
+```json
+{
+  "ccsm-a1b2c3d4e5f6": {
+    "projectId": "-Users-takahiko-repo-my-app",
+    "projectPath": "/Users/takahiko/repo/my-app",
+    "createdAt": "2026-04-03T..."
+  }
+}
+```
+This is a hint cache for reverse lookup (sandboxName → projectId), not the source of truth. Reconciled against `sbx ls` on startup. Also extends `projects.json` with `SandboxConfig` per project.
 
 **Dockerfile.sandbox** (project root, for whole-app sandboxing — Req 3):
 ```dockerfile
@@ -567,7 +583,7 @@ CMD ["deno", "task", "start:network", "--host", "0.0.0.0"]
 
 - **Credential isolation**: Docker Sandbox proxy handles all API authentication. Credentials stored in OS keychain via `sbx secret`. Session manager has zero credential-related code.
 - **Deno permission expansion**: New `deno task dev:sandbox` / `start:sandbox` variants add only `--allow-run=sbx` — follows existing `dev:network` pattern for incremental permission grants.
-- **Sandbox name injection**: `projectId` used in sandbox names sanitized to `[a-zA-Z0-9-]` to prevent command injection in `sbx create --name`.
+- **Sandbox name safety**: Names are deterministic SHA-256 hashes (`ccsm-<12hex>`), inherently safe — no user-controlled strings in the name. Eliminates command injection risk entirely.
 - **Session data boundary**: Sandboxed session data stays inside the VM. Session manager reads via `sbx exec` — no host filesystem crossover beyond the mounted workspace.
 - **`--dangerously-skip-permissions`**: Docker Sandbox template runs Claude Code with this flag internally (acceptable because VM-level isolation replaces process-level permissions).
 - **Whole-app sandbox**: `Dockerfile.sandbox` preserves `--deny-write=$HOME/.claude`; mounts `~/.claude` RO for session browsing, `PROJECTS_ROOT` RW for project files.

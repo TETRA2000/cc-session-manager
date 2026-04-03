@@ -118,6 +118,35 @@
 - **Rationale**: Preserves full sandbox isolation. Session data is transient within the sandbox (deleted on `sbx rm`) which is acceptable — the workspace files (actual code) persist on host.
 - **Trade-offs**: Slower reads (subprocess per file); data lost on sandbox removal
 
+### Decision: Deterministic Hash-Based Sandbox Naming
+- **Context**: ProjectIds are encoded directory paths (e.g., `-Users-takahiko-repo-cc-session-manager`) that can exceed Docker's 128-char container name limit
+- **Alternatives Considered**:
+  1. Use projectId directly with sanitization — still too long for deep paths
+  2. Let `sbx create` auto-generate names — lose deterministic lookup
+  3. Hash-based short names — fixed length, deterministic, safe
+- **Selected Approach**: `ccsm-<sha256-first12>` (12 hex chars of SHA-256 of projectId). Store mapping in `sandboxes.json` hint cache for reverse lookup.
+- **Rationale**: Fixed 17-char name (`ccsm-` + 12 hex). Deterministic: same projectId always produces same name. No user-controlled strings = no injection risk. Hint cache enables projectId → name and name → projectId lookups.
+- **Trade-offs**: Names are opaque (not human-readable). Hint cache needed for reverse lookup.
+
+### Decision: sbx ls Tabular Parsing + Hint Cache
+- **Context**: `sbx ls` outputs human-readable tabular text — no `--format json` or `--json` flag is available
+- **Alternatives Considered**:
+  1. Parse tabular output only — fragile across versions
+  2. Maintain full state file as source of truth — duplicates sbx state, risks staleness
+  3. Tabular parsing + lightweight hint cache — best of both
+- **Selected Approach**: Parse `sbx ls` tabular output by column positions (SANDBOX, AGENT, STATUS, PORTS, WORKSPACE). Maintain `sandboxes.json` hint cache for projectId↔sandboxName mapping. Reconcile on startup.
+- **Rationale**: Hint cache is small and cheap to maintain. If tabular parsing breaks on a version update, the hint cache still provides sandbox names for `sbx stop/rm` operations. Reconciliation on startup handles orphaned entries.
+- **Trade-offs**: Tabular parsing is version-dependent. If `sbx` later adds `--json`, switch to that.
+
+### Decision: Session Data Streaming via Subprocess Pipe
+- **Context**: Existing session parser uses `TextDecoderStream` for streaming large JSONL files. Sandboxed data is inside the VM, accessible via `sbx exec cat`.
+- **Alternatives Considered**:
+  1. `sbx exec cat` → full string in memory → parse — breaks streaming, memory spikes on large files
+  2. `sbx exec cat` with piped stdout → stream into existing parser — preserves streaming
+- **Selected Approach**: Use `Deno.Command("sbx", { args: ["exec", name, "--", "cat", path], stdout: "piped" }).spawn()` and pipe `stdout` ReadableStream through `TextDecoderStream` into the existing JSONL line splitter.
+- **Rationale**: Preserves the streaming architecture. Subprocess stdout is a `ReadableStream<Uint8Array>` in Deno, directly compatible with the existing parser pipeline.
+- **Trade-offs**: Slightly higher latency than direct file read (subprocess overhead). But memory usage stays constant regardless of file size.
+
 ### Decision: Use { ok, error } Pattern (not Result<T, E>)
 - **Context**: Previous design used algebraic Result type, inconsistent with existing codebase
 - **Selected Approach**: Use existing `{ ok: boolean; error?: string }` pattern with optional data and errorCode fields
