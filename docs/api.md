@@ -14,7 +14,8 @@ Returns aggregate statistics and the 10 most recent sessions with content.
     "projects": 89,
     "sessions": 507,
     "active7d": 53,
-    "tokens30d": 0
+    "tokens30d": 0,
+    "activeSandboxes": 2
   },
   "recentSessions": [
     {
@@ -138,6 +139,7 @@ Launch a Claude Code session in Terminal or browser.
 | `target` | `"terminal"` \| `"web"` | No (default: `"terminal"`) | Where to launch |
 | `prompt` | string | No | Initial prompt for "new" mode |
 | `webUrl` | string | No | Web session URL for "web" target |
+| `sandbox` | `"none"` \| `"sbx"` \| `"native"` | No | Sandbox strategy; when set, returns `launchCommand` for PTY |
 
 **Response:**
 
@@ -214,6 +216,122 @@ Update per-project settings. Stored in `$PROJECTS_ROOT/.session-manager/projects
 
 ---
 
+## Sandbox Endpoints
+
+### GET /api/sandbox/strategies
+
+Returns available sandbox strategies with dependency status and credential info.
+
+**Response:**
+
+```json
+{
+  "strategies": [
+    { "strategy": "none", "available": true, "version": null, "installHint": null },
+    { "strategy": "native", "available": true, "version": "macOS Seatbelt", "installHint": null },
+    { "strategy": "sbx", "available": true, "version": "0.23.0", "installHint": null, "credentialsConfigured": true }
+  ],
+  "defaultStrategy": "none",
+  "insideContainer": false
+}
+```
+
+---
+
+### GET /api/sandbox/instances
+
+Returns all session-manager-created sandboxes (filtered by `ccsm-` prefix).
+
+**Response:**
+
+```json
+{
+  "instances": [
+    {
+      "name": "ccsm-a1b2c3d4e5f6",
+      "projectId": "-Users-takahiko-repo-my-app",
+      "strategy": "sbx",
+      "status": "running",
+      "info": "running"
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/sandbox/instances/:projectId
+
+Returns the sandbox instance for a specific project, or `null` if none exists.
+
+**Response:** `{ "instance": { ... } }` or `{ "instance": null }`
+
+---
+
+### POST /api/sandbox/instances
+
+Create a sandbox for a project.
+
+**Request body:**
+
+```json
+{
+  "projectId": "-Users-takahiko-repo-my-app",
+  "projectPath": "/Users/takahiko/repo/my-app",
+  "strategy": "sbx",
+  "config": {
+    "networkPolicy": "balanced",
+    "extraMounts": [],
+    "ephemeral": false
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `projectId` | string | Yes | Encoded project directory name |
+| `projectPath` | string | Yes | Absolute filesystem path |
+| `strategy` | `"sbx"` \| `"native"` | No | Defaults to global `defaultSandboxStrategy` |
+| `config.networkPolicy` | `"open"` \| `"balanced"` \| `"restricted"` | No | Docker Sandbox network policy (default: `balanced`) |
+| `config.extraMounts` | string[] | No | Additional read-only mount paths |
+| `config.ephemeral` | boolean | No | Auto-remove sandbox on session exit |
+
+**Response:** `{ "ok": true, "instance": { ... } }`
+
+---
+
+### POST /api/sandbox/instances/:name/stop
+
+Stop a running sandbox.
+
+**Response:** `{ "ok": true }`
+
+---
+
+### DELETE /api/sandbox/instances/:name
+
+Remove a sandbox and clean up resources.
+
+**Response:** `{ "ok": true }`
+
+---
+
+### POST /api/sandbox/instances/:name/exec
+
+Execute a command inside a running sandbox.
+
+**Request body:**
+
+```json
+{ "command": ["echo", "hello"] }
+```
+
+**Response:** `{ "ok": true, "output": "hello" }`
+
+**Error (sandbox stopped):** `{ "ok": false, "error": "Sandbox ccsm-abc is not running" }`
+
+---
+
 ## Type Definitions
 
 ### ProjectSummary
@@ -255,3 +373,22 @@ Update per-project settings. Stored in `$PROJECTS_ROOT/.session-manager/projects
 | `model` | string \| null | Model used (assistant only) |
 | `timestamp` | string | ISO timestamp |
 | `tokens` | `{ input, output }` \| null | Token usage (assistant only) |
+
+### SandboxInstance
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Sandbox name (`ccsm-<sha256-12>`) |
+| `projectId` | string | Associated project encoded ID |
+| `strategy` | `"sbx"` \| `"native"` | Sandbox strategy |
+| `status` | `"running"` \| `"stopped"` \| `"not-found"` | Current status |
+| `info` | string \| null | Additional status info from backend |
+
+### SandboxConfig
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `strategy` | `"none"` \| `"native"` \| `"sbx"` | Sandbox strategy |
+| `networkPolicy` | `"open"` \| `"balanced"` \| `"restricted"` | Network access policy |
+| `extraMounts` | string[] | Additional read-only mount paths |
+| `ephemeral` | boolean | Auto-remove sandbox on session exit |

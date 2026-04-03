@@ -7,6 +7,9 @@ Claude Code Session Manager is a local Deno web application that reads Claude Co
 ```
 Browser (Preact+HTM)  <──HTTP──>  Deno Server (Hono)  <──read──>  ~/.claude/ (read-only)
      static/                          src/                         JSONL files
+                                       │
+                                       ├──sbx exec──>  Docker Sandbox VM (per project)
+                                       └──claude --settings──>  Native Seatbelt sandbox
 ```
 
 ## Tech Stack
@@ -33,13 +36,19 @@ cc-session-manager/
 │   │   ├── dashboard.ts       # GET /api/dashboard
 │   │   ├── projects.ts        # GET /api/projects[/:id]
 │   │   ├── sessions.ts        # GET /api/sessions/:id/transcript
-│   │   ├── launcher.ts        # POST /api/launch
-│   │   └── wizard.ts          # POST /api/projects/create, GET/PUT settings
+│   │   ├── launcher.ts        # POST /api/launch (sandbox-aware)
+│   │   ├── wizard.ts          # POST /api/projects/create, GET/PUT settings
+│   │   └── sandbox.ts         # GET/POST/DELETE /api/sandbox/* (lifecycle, strategies, exec)
 │   └── services/
-│       ├── session-parser.ts  # Streaming JSONL parser
+│       ├── session-parser.ts  # Streaming JSONL parser (host + sandboxed via subprocess pipe)
 │       ├── project-discovery.ts # Project scanning + path decoding
 │       ├── session-launcher.ts  # Terminal + browser launch via osascript/open
-│       └── project-manager.ts   # Project creation, settings management
+│       ├── project-manager.ts   # Project creation, settings management
+│       ├── sandbox-manager.ts   # Sandbox lifecycle orchestration, strategy delegation
+│       ├── sbx-backend.ts       # Docker Sandbox (sbx CLI) wrapper: create/ls/stop/rm/exec/stream
+│       ├── native-backend.ts    # Claude Code native Seatbelt sandbox via --settings
+│       ├── dependency-checker.ts # Runtime detection of sbx, sandbox-exec, bwrap
+│       └── sandbox-naming.ts    # Deterministic ccsm-<sha256> naming + hint cache persistence
 ├── static/
 │   ├── index.html             # SPA shell with importmap
 │   ├── style.css              # Unified CSS from UI mocks
@@ -58,8 +67,16 @@ cc-session-manager/
 │       ├── transcript.js      # Session transcript view
 │       ├── toast.js           # Auto-dismissing toast notifications
 │       └── wizard.js          # New project wizard form
+├── Dockerfile.sandbox         # Whole-app sandboxing container image
 └── tests/
-    ├── fixtures/sample-session.jsonl
+    ├── fixtures/
+    │   ├── sample-session.jsonl
+    │   ├── command-session.jsonl
+    │   └── mock-sbx           # Mock sbx CLI (bash script with file-based state)
+    ├── sandbox-naming.test.ts
+    ├── sbx-backend.test.ts
+    ├── sbx-e2e.test.ts        # Backend E2E tests via mock-sbx
+    ├── sandbox-routes-e2e.test.ts # Route E2E tests via mock-sbx
     ├── session-parser.test.ts
     └── project-discovery.test.ts
 ```
@@ -99,8 +116,16 @@ GET  /api/projects/:id               → { project, sessions[] }
 GET  /api/projects/:id/settings      → ProjectSettings
 PUT  /api/projects/:id/settings      → { ok }
 GET  /api/sessions/:id/transcript    → { meta, entries[] }
-POST /api/launch                     → { ok, error? }
+POST /api/launch                     → { ok, error?, launchCommand? }
 POST /api/projects/create            → { ok, path?, error? }
+
+GET  /api/sandbox/strategies         → { strategies[], defaultStrategy, insideContainer }
+GET  /api/sandbox/instances          → { instances[] }
+GET  /api/sandbox/instances/:id      → { instance }
+POST /api/sandbox/instances          → { ok, instance }
+POST /api/sandbox/instances/:n/stop  → { ok }
+DELETE /api/sandbox/instances/:n     → { ok }
+POST /api/sandbox/instances/:n/exec  → { ok, output }
 ```
 
 ### Session Launcher
@@ -123,15 +148,22 @@ Enforced via Deno's permission flags at runtime:
 | `--allow-read` | `~/.claude`, `.` | Read session data and serve static files |
 | `--deny-write` | `~/.claude` | Prevent modification of Claude's state |
 | `--allow-net` | `127.0.0.1:3456` | Local-only HTTP server |
-| `--allow-env` | `HOME` | Resolve home directory |
+| `--allow-env` | `HOME`, `CCSM_INSIDE_CONTAINER` | Resolve home directory, detect container mode |
 | `--allow-run` | `osascript`, `open`, `git` | Launch Terminal, open browser, git init |
-| `--allow-write` | `$PROJECTS_ROOT` | Create new projects (default: `~/Projects`) |
+| `--allow-run` | `sbx` (sandbox tasks only) | Docker Sandbox lifecycle management |
+| `--allow-write` | `$PROJECTS_ROOT` | Create new projects, sandbox hint cache |
+
+### Sandbox Security
+
+- **Docker Sandbox (`sbx`)**: Each project runs in an isolated VM. Credentials handled by the host-side proxy (`sbx secret`) — the session manager has zero credential code.
+- **Native sandbox**: Claude Code's built-in Seatbelt (macOS) or bubblewrap (Linux) restricts filesystem access to the project directory.
+- **Whole-app sandbox**: `Dockerfile.sandbox` runs the entire application in a container with `~/.claude` mounted read-only.
 
 ## Phased Development
 
 - **Phase 1**: Core reader — session parser, project discovery, web GUI
 - **Phase 2**: Session launcher — terminal + web launch, remote-control URL detection
-- **Phase 3 (current)**: Project wizard + settings — create projects, per-project metadata
-- **Phase 3**: Project management — new project wizard, templates
+- **Phase 3**: Project wizard + settings — create projects, per-project metadata
+- **Phase 3.5**: Sandboxing — per-project Docker Sandbox/native isolation, credential delegation, lifecycle management API
 - **Phase 4**: Dashboard enhancements — activity heatmap, live file watching (SSE)
 - **Phase 5**: Polish — keyboard shortcuts, theme toggle, HTML export, CLI
