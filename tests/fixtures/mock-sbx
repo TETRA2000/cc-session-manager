@@ -5,6 +5,19 @@ set -euo pipefail
 
 STATE_DIR="${MOCK_SBX_STATE_DIR:?MOCK_SBX_STATE_DIR must be set}"
 
+# Simple JSON field extractor (avoids python3 dependency)
+# Usage: json_get <file> <field>
+json_get() {
+  grep -o "\"$2\":\"[^\"]*\"" "$1" | head -1 | sed "s/\"$2\":\"//;s/\"$//"
+}
+
+# Simple JSON field updater
+# Usage: json_set <file> <field> <value>
+json_set() {
+  local tmp="${1}.tmp"
+  sed "s/\"$2\":\"[^\"]*\"/\"$2\":\"$3\"/" "$1" > "$tmp" && mv "$tmp" "$1"
+}
+
 case "${1:-}" in
   --version)
     echo "sbx version 0.23.0"
@@ -16,13 +29,12 @@ case "${1:-}" in
     NAME=""
     AGENT=""
     WORKSPACE=""
-    # Parse arguments
     while [[ $# -gt 0 ]]; do
       case "$1" in
         --name) NAME="$2"; shift 2 ;;
+        --network-policy) shift 2 ;;
         claude|codex|shell) AGENT="$1"; shift ;;
         *)
-          # First non-flag arg after agent is workspace
           if [[ -n "$AGENT" && -z "$WORKSPACE" ]]; then
             WORKSPACE="$1"
           fi
@@ -44,14 +56,13 @@ case "${1:-}" in
     ;;
 
   ls)
-    # Print tabular output matching real sbx ls format
     printf "%-24s%-8s%-9s%-25s%s\n" "SANDBOX" "AGENT" "STATUS" "PORTS" "WORKSPACE"
     for f in "$STATE_DIR"/*; do
       [[ -f "$f" ]] || continue
       NAME=$(basename "$f")
-      AGENT=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['agent'])" "$f" 2>/dev/null || echo "unknown")
-      STATUS=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['status'])" "$f" 2>/dev/null || echo "unknown")
-      WORKSPACE=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['workspace'])" "$f" 2>/dev/null || echo "")
+      AGENT=$(json_get "$f" "agent" 2>/dev/null || echo "unknown")
+      STATUS=$(json_get "$f" "status" 2>/dev/null || echo "unknown")
+      WORKSPACE=$(json_get "$f" "workspace" 2>/dev/null || echo "")
       printf "%-24s%-8s%-9s%-25s%s\n" "$NAME" "$AGENT" "$STATUS" "" "$WORKSPACE"
     done
     exit 0
@@ -63,14 +74,7 @@ case "${1:-}" in
       echo "Error: No such sandbox: $NAME" >&2
       exit 1
     fi
-    # Update status to stopped
-    python3 -c "
-import json, sys
-f = sys.argv[1]
-d = json.load(open(f))
-d['status'] = 'stopped'
-json.dump(d, open(f, 'w'))
-" "$STATE_DIR/$NAME"
+    json_set "$STATE_DIR/$NAME" "status" "stopped"
     echo "$NAME"
     exit 0
     ;;
@@ -92,18 +96,17 @@ json.dump(d, open(f, 'w'))
       echo "Error: No such sandbox: $NAME" >&2
       exit 1
     fi
-    STATUS=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['status'])" "$STATE_DIR/$NAME")
+    STATUS=$(json_get "$STATE_DIR/$NAME" "status")
     if [[ "$STATUS" != "running" ]]; then
       echo "Error: Sandbox $NAME is not running" >&2
       exit 1
     fi
-    # Find the -- separator and execute everything after it
-    shift 2  # remove "exec" and NAME
+    shift 2
     while [[ $# -gt 0 && "$1" != "--" ]]; do
-      shift  # skip flags like -it
+      shift
     done
     if [[ $# -gt 0 && "$1" == "--" ]]; then
-      shift  # skip the --
+      shift
     fi
     if [[ $# -eq 0 ]]; then
       echo "Error: no command specified" >&2
