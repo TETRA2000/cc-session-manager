@@ -45,7 +45,29 @@ A unified social media feed-style timeline view that aggregates messages from al
 5. If a session becomes inactive (PID no longer running), the Session Manager shall remove it from the active sessions sidebar or visually mark it as ended.
 6. The Session Manager shall update the active sessions list periodically without requiring a manual page refresh.
 
-### Requirement 5: Timeline Navigation and Context
+### Requirement 5: Pinned Attention-Required Messages
+**Objective:** As a developer, I want attention-required messages pinned to the top of the timeline, so that I never miss permission prompts or questions regardless of how far I've scrolled.
+
+#### Acceptance Criteria
+1. While there are unresolved attention-required messages from active sessions, the Session Manager shall display them in a pinned section at the top of the timeline feed, above the scrollable content.
+2. The Session Manager shall visually distinguish the pinned section from the main feed (e.g., sticky header, separator, or distinct background).
+3. When a pinned attention-required message is resolved (session continues or becomes inactive), the Session Manager shall remove it from the pinned section.
+4. When the user clicks a pinned message, the Session Manager shall navigate to the full transcript view for that session, scrolled to the relevant message.
+5. The Session Manager shall display pinned messages in chronological order (oldest first) so that the most urgent unresolved item appears at the top.
+6. While the pinned section is visible, the Session Manager shall show a count indicator (e.g., "3 items need attention") in the pinned section header.
+
+### Requirement 6: Auto-Scrolling
+**Objective:** As a developer, I want the timeline to auto-scroll to show new messages as they arrive, so that I can passively monitor activity across sessions without manual refreshing.
+
+#### Acceptance Criteria
+1. While the user is scrolled to the top of the timeline (viewing the latest messages), the Session Manager shall automatically scroll to display new messages as they arrive.
+2. While the user has scrolled away from the top, the Session Manager shall not auto-scroll, preserving the user's current reading position.
+3. When new messages arrive while the user is scrolled away from the top, the Session Manager shall display an indicator (e.g., "New messages" banner) that the user can click to jump to the latest.
+4. The Session Manager shall provide a toggle control to enable or disable auto-scrolling behavior.
+5. When auto-scrolling is disabled via the toggle, the Session Manager shall not auto-scroll regardless of scroll position.
+6. The Session Manager shall poll for new messages periodically without requiring a manual page refresh.
+
+### Requirement 7: Timeline Navigation and Context
 **Objective:** As a developer, I want clear context for each timeline message, so that I can understand which project and session a message belongs to without leaving the timeline.
 
 #### Acceptance Criteria
