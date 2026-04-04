@@ -341,11 +341,12 @@ export function classifyImportance(
   }
 
   // Assistant messages with questions or AskUserQuestion tool
-  if (entry.type === "assistant") {
+  // Only high when it's the last message in an active session (still unanswered)
+  if (entry.type === "assistant" && isLastInActiveSession) {
     const hasQuestion = entry.text?.trimEnd().endsWith("?") ?? false;
     const hasAskUser = entry.toolCalls.some((tc) => tc.name === "AskUserQuestion");
     if (hasQuestion || hasAskUser) {
-      return { importance: "high", isAttention: isLastInActiveSession };
+      return { importance: "high", isAttention: true };
     }
   }
 

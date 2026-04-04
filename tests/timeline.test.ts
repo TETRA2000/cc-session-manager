@@ -29,7 +29,7 @@ Deno.test("classifyImportance: assistant question (ends with ?) is high + attent
   assertEquals(result.isAttention, true);
 });
 
-Deno.test("classifyImportance: assistant question is high but NOT attention when not last in active session", () => {
+Deno.test("classifyImportance: assistant question is normal when not last in active session (already answered)", () => {
   const entry = makeEntry({ text: "Should I proceed with the changes?" });
   const result = classifyImportance(entry, false);
   assertEquals(result.importance, "normal");
