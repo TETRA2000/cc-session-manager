@@ -235,6 +235,43 @@ export interface SummaryCacheEntry {
   generatedAt: string;
 }
 
+// ─── Timeline types ───
+
+export type ImportanceLevel = "high" | "normal" | "low";
+
+export interface TimelineEntry {
+  uuid: string;
+  sessionId: string;
+  projectId: string;
+  projectName: string;
+  sessionSummary: string | null;
+  type: "user" | "assistant" | "system";
+  text: string | null;
+  importance: ImportanceLevel;
+  isAttention: boolean;
+  timestamp: string;
+  model: string | null;
+  toolNames: string[];
+  isRemoteConnected: boolean;
+}
+
+export interface ActiveSessionInfo {
+  sessionId: string;
+  projectId: string;
+  projectName: string;
+  status: "active" | "remote";
+  lastActivity: string;
+  hasAttention: boolean;
+  isRemoteConnected: boolean;
+}
+
+export interface TimelineResponse {
+  entries: TimelineEntry[];
+  activeSessions: ActiveSessionInfo[];
+  hasMore: boolean;
+  oldestTimestamp: string | null;
+}
+
 // ─── Launcher types ───
 
 export type LaunchTarget = "terminal" | "web";

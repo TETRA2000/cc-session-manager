@@ -6,6 +6,7 @@ import { DashboardView } from "./components/dashboard.js";
 import { ProjectsView } from "./components/projects.js";
 import { TranscriptView } from "./components/transcript.js";
 import { WizardView } from "./components/wizard.js";
+import { TimelineView } from "./components/timeline.js";
 import { Toast } from "./components/toast.js";
 
 function App() {
@@ -18,6 +19,9 @@ function App() {
       break;
     case "/new-project":
       view = html`<${WizardView} />`;
+      break;
+    case "/timeline":
+      view = html`<${TimelineView} />`;
       break;
     case "/transcript/:sessionId":
       view = html`<${TranscriptView} />`;
