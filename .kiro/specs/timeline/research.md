@@ -65,15 +65,25 @@
 - **Rationale**: Avoids O(n) tool-call map building; only needs text preview + timestamp + type + importance
 - **Trade-offs**: Small code duplication with `parseTranscript()`, but much faster for timeline use case
 
-### Decision: In-Memory Response Cache with TTL
-- **Context**: Timeline endpoint aggregates data from many JSONL files; re-parsing on every poll is wasteful
+### Decision: In-Memory Unfiltered Cache with Post-Cache Filtering
+- **Context**: Timeline endpoint aggregates data from many JSONL files; re-parsing on every poll is wasteful. Design review identified that caching per query-param combination reduces hit rate.
 - **Alternatives**:
   1. No cache (parse fresh each request)
-  2. In-memory TTL cache (10s)
-  3. Persistent cache file (like summaries.json)
-- **Selected Approach**: In-memory TTL cache (10s expiry) in timeline route
-- **Rationale**: Matches polling interval; eliminates redundant parsing; no disk I/O; memory-safe (single cached response)
-- **Trade-offs**: Stale by up to 10s; cleared on server restart (acceptable)
+  2. Per-query-param cache keys (low hit rate)
+  3. Single unfiltered cache with post-cache filtering
+- **Selected Approach**: Cache the unfiltered, unpaginated entry list with 10s TTL under a single key. Apply importance filtering and `before` cursor in the route handler after cache retrieval.
+- **Rationale**: Single cache key maximizes hit rate. Filtering an in-memory array is O(n) and negligible compared to JSONL parsing. Different filter/pagination combos all share the same cached data.
+- **Trade-offs**: Stale by up to 10s; response includes counts for all importance levels (useful for filter pill badges).
+
+### Decision: Single 10s Poll Interval
+- **Context**: Design review identified that dual poll intervals (10s for entries, 5s for active sessions) hitting the same endpoint creates redundant traffic.
+- **Alternatives**:
+  1. Dual intervals (10s entries, 5s sidebar) with separate endpoints
+  2. Single 10s interval for full response
+  3. Single 5s interval (more responsive but more server load)
+- **Selected Approach**: Single 10s poll interval. Both entries and active sessions refresh together from the same `GET /api/timeline` response.
+- **Rationale**: Simplest approach; avoids redundant requests; 10s is responsive enough for monitoring; active session changes are infrequent. Can add a faster lightweight endpoint later if needed.
+- **Trade-offs**: Sidebar updates at 10s instead of 5s — acceptable for v1.
 
 ### Decision: Pinned Messages as Frontend-Only Logic
 - **Context**: Pinned section needs to know which messages are "unresolved attention-required"

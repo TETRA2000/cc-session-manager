@@ -64,7 +64,6 @@ graph TB
     TimelineView --> FilterBar
 
     TimelineView -->|poll 10s| TimelineRoute
-    Sidebar -->|poll 5s| TimelineRoute
 
     TimelineRoute --> TimelineCache
     TimelineCache -->|on miss| SessionParser
@@ -107,10 +106,10 @@ sequenceDiagram
     participant SP as session-parser
     participant PD as project-discovery
 
-    FE->>API: GET /api/timeline?limit=50&importance=all
-    API->>Cache: check cache key
+    FE->>API: GET /api/timeline?limit=50&importance=all&before=
+    API->>Cache: check cache (single key, unfiltered)
     alt cache hit and fresh
-        Cache-->>API: cached TimelineResponse
+        Cache-->>API: cached unfiltered entries + activeSessions
     else cache miss or stale
         API->>PD: discoverProjects + listSessionFiles
         PD-->>API: sorted SessionFileInfo[]
@@ -121,9 +120,10 @@ sequenceDiagram
             SP-->>API: TimelineEntry[]
         end
         API->>API: merge all entries by timestamp, classify importance
-        API->>Cache: store with 10s TTL
+        API->>Cache: store unfiltered result with 10s TTL
     end
-    API-->>FE: TimelineResponse
+    API->>API: apply importance filter + before cursor + limit
+    API-->>FE: TimelineResponse (filtered)
     FE->>FE: compute pinned from attention + active
     FE->>FE: render sidebar, pinned section, feed
 ```
@@ -167,7 +167,7 @@ stateDiagram-v2
 | 4.3 | Attention badge on sidebar | ActiveSessionsSidebar | hasAttention field | — |
 | 4.4 | Click sidebar filters to session | ActiveSessionsSidebar + FilterBar | client-side filter | — |
 | 4.5 | Inactive session removal | ActiveSessionsSidebar | polling refresh | — |
-| 4.6 | Periodic active session update | ActiveSessionsSidebar | 5s poll interval | — |
+| 4.6 | Periodic active session update | ActiveSessionsSidebar | 10s poll interval (shared with feed) | — |
 | 5.1 | Pinned section at top | PinnedSection | computed from entries + activeSessions | — |
 | 5.2 | Visual distinction for pinned | PinnedSection | .pinned-section CSS | — |
 | 5.3 | Remove resolved pinned messages | PinnedSection | re-compute on poll | — |
@@ -213,7 +213,7 @@ stateDiagram-v2
 - Return active sessions list with attention flags
 - Support cursor-based pagination via `before` timestamp parameter
 - Support importance filtering via `importance` query parameter
-- Response cached in memory with 10s TTL
+- Cache unfiltered entry list in memory with 10s TTL; apply filtering and pagination post-cache for high cache hit rate across different query parameters
 
 **Dependencies**
 - Inbound: Frontend TimelineView — polling consumer (P0)
@@ -410,7 +410,7 @@ Renders individual timeline entry: avatar, role label, project tag, importance b
 
 #### FilterBar — Summary only
 
-Row of pill buttons (All, High, Normal, Low) with counts. Active pill highlighted. Changing selection triggers parent `setSelectedImportance()`, which re-fetches with `?importance=` param.
+Row of pill buttons (All, High, Normal, Low) with counts. Active pill highlighted. Changing selection triggers parent `setSelectedImportance()` which re-fetches with updated `?importance=` param. Counts are computed client-side from the full response to avoid extra requests.
 
 ## Data Models
 
@@ -530,4 +530,5 @@ interface ActiveSessionInfo {
 - `extractTimelineEntries()` skips tool-call pairing (major perf gain over `parseTranscript()`)
 - Limit to 50 most recent sessions by mtime (skip old/inactive projects)
 - Client-side entry cap of 200 to prevent DOM bloat
-- Separate poll intervals: 10s for entries, 5s for active sessions (active session check is very fast)
+- Single 10s poll interval for both entries and active sessions (simplifies frontend, avoids redundant requests)
+- Cache stores unfiltered entries; importance filtering and pagination applied post-cache (single cache key, high hit rate)
