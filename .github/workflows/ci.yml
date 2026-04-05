@@ -17,6 +17,9 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Cache Deno dependencies
+        run: deno install
+
       - name: Type check
         run: deno check main.ts
 
@@ -34,33 +37,39 @@ jobs:
   swift-linux:
     name: Swift Tests (Linux)
     runs-on: ubuntu-latest
-    container: swift:6.1
-    defaults:
-      run:
-        working-directory: swift
+    container:
+      image: swift:6.1
     steps:
       - uses: actions/checkout@v4
 
       - name: Build
+        working-directory: swift
         run: swift build
 
       - name: Run tests
+        working-directory: swift
         run: swift test
 
   swift-macos:
     name: Swift Tests (macOS)
     runs-on: macos-26
-    defaults:
-      run:
-        working-directory: swift
     steps:
       - uses: actions/checkout@v4
 
       - name: Build
+        working-directory: swift
         run: swift build
 
       - name: Run unit tests
+        working-directory: swift
         run: swift test
 
       - name: Build for iOS (compile check)
-        run: xcodebuild build -scheme CCSessionAPI -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' -skipPackagePluginValidation
+        working-directory: swift
+        run: |
+          xcodebuild build \
+            -scheme CCSessionAPI \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO
