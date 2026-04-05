@@ -9,7 +9,7 @@ on:
 jobs:
   deno:
     name: Deno Tests
-    runs-on: ubuntu-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
