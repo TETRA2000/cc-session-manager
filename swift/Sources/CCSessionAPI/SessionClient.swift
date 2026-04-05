@@ -125,8 +125,12 @@ public final class SessionClient: Sendable {
 
     private static let session: URLSession = {
         let config = URLSessionConfiguration.default
+        #if canImport(Security)
         let delegate = InsecureSessionDelegate()
         return URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+        #else
+        return URLSession(configuration: config)
+        #endif
     }()
 
     private func performRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
@@ -177,6 +181,7 @@ private struct ErrorBody: Decodable {
     let error: String?
 }
 
+#if canImport(Security)
 /// Allows plain HTTP connections by accepting all server trust challenges.
 /// Used for local/Tailscale servers that don't have TLS certificates.
 private final class InsecureSessionDelegate: NSObject, URLSessionDelegate, Sendable {
@@ -191,3 +196,4 @@ private final class InsecureSessionDelegate: NSObject, URLSessionDelegate, Senda
         return (.performDefaultHandling, nil)
     }
 }
+#endif

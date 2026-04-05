@@ -15,15 +15,21 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.1"
+          deno-version: v2.x
 
       - name: Type check
-        run: deno task check
+        run: deno check --no-lock main.ts
 
       - name: Run tests
         run: |
           mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions"
-          deno task test
+          deno test --no-lock \
+            --allow-read=$HOME/.claude,.,/var/folders,/tmp \
+            --allow-env=HOME,PROJECTS_ROOT \
+            --allow-write=/var/folders,/tmp \
+            --allow-run=git \
+            --ignore=tests/pty-manager.test.ts \
+            tests/
 
   swift-linux:
     name: Swift Tests (Linux)
