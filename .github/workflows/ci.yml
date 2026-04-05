@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deno:
+    name: Deno Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type check
+        run: deno task check
+
+      - name: Run tests
+        run: deno task test
+
+  swift-linux:
+    name: Swift Tests (Linux)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: swift
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "5.9"
+
+      - name: Build
+        run: swift build
+
+      - name: Run tests
+        run: swift test
+
+  swift-macos:
+    name: Swift Tests (macOS)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: swift
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: swift build
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build for iOS (compile check)
+        run: xcodebuild build -scheme CCSessionAPI -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' -skipPackagePluginValidation
