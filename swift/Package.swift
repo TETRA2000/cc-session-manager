@@ -27,10 +27,20 @@ let package = Package(
             ],
             path: "Sources/CCSessionCLI"
         ),
+        .executableTarget(
+            name: "CCSessionApp",
+            dependencies: ["CCSessionAPI"],
+            path: "Sources/CCSessionApp"
+        ),
         .testTarget(
             name: "CCSessionAPITests",
             dependencies: ["CCSessionAPI"],
             path: "Tests/CCSessionAPITests"
+        ),
+        .testTarget(
+            name: "CCSessionAppTests",
+            dependencies: ["CCSessionAPI"],
+            path: "Tests/CCSessionAppTests"
         ),
     ]
 )
