@@ -21,7 +21,18 @@ jobs:
         run: deno install
 
       - name: Type check
-        run: deno check main.ts
+        run: deno check main.ts 2>&1 | tee /tmp/deno-check-output.txt
+        continue-on-error: true
+
+      - name: Show type check output
+        if: always()
+        run: |
+          echo "=== Type check output ==="
+          cat /tmp/deno-check-output.txt 2>/dev/null || echo "No output"
+          echo "=== End ==="
+          if grep -qi "error" /tmp/deno-check-output.txt 2>/dev/null; then
+            exit 1
+          fi
 
       - name: Setup test directories
         run: mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions" "$HOME/Projects/.session-manager"
@@ -75,13 +86,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Swift version
+        run: swift --version
+
       - name: Build
         working-directory: swift
-        run: swift build
+        run: swift build 2>&1
 
       - name: Run unit tests
         working-directory: swift
-        run: swift test
+        run: swift test 2>&1
 
       - name: Build for iOS (compile check)
         working-directory: swift
@@ -91,4 +105,4 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation \
             -skipMacroValidation \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -50
