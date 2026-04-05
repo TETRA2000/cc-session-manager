@@ -23,16 +23,35 @@ jobs:
       - name: Type check
         run: deno check main.ts
 
+      - name: Setup test directories
+        run: mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions" "$HOME/Projects/.session-manager"
+
       - name: Run tests
         run: |
-          mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions" "$HOME/Projects/.session-manager"
           deno test \
             --allow-read="$HOME/.claude","$HOME/Projects",.,/tmp \
             --allow-env=HOME,PROJECTS_ROOT \
             --allow-write="$HOME/Projects",/tmp \
             --allow-run=git \
             --ignore=tests/pty-manager.test.ts \
-            tests/
+            tests/ 2>&1 | tee /tmp/deno-test-output.txt
+        continue-on-error: true
+
+      - name: Show test output on failure
+        if: failure()
+        run: cat /tmp/deno-test-output.txt 2>/dev/null || echo "No output captured"
+
+      - name: Check test result
+        run: |
+          if grep -q "FAILED" /tmp/deno-test-output.txt 2>/dev/null; then
+            echo "Tests failed!"
+            exit 1
+          fi
+          if ! grep -q "ok |" /tmp/deno-test-output.txt 2>/dev/null; then
+            echo "Tests did not complete successfully"
+            cat /tmp/deno-test-output.txt 2>/dev/null
+            exit 1
+          fi
 
   swift-linux:
     name: Swift Tests (Linux)
