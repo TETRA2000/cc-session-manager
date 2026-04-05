@@ -2,7 +2,7 @@
 import SwiftUI
 
 
-public struct FeedEntryView: View {
+struct FeedEntryView: View {
     let entry: TimelineEntry
     @State private var expanded = false
 
@@ -26,7 +26,7 @@ public struct FeedEntryView: View {
         entry.type.uppercased()
     }
 
-    public var body: some View {
+    var body: some View {
         HStack(alignment: .top, spacing: 10) {
             // Importance bar
             RoundedRectangle(cornerRadius: 1.5)
@@ -117,10 +117,10 @@ public struct FeedEntryView: View {
     }
 }
 
-public struct AttentionBadge: View {
+struct AttentionBadge: View {
     let type: String
 
-    public var body: some View {
+    var body: some View {
         Text(type == "system" ? "! ERROR" : "? NEEDS INPUT")
             .font(.system(size: 8, weight: .semibold, design: .monospaced))
             .padding(.horizontal, 5)

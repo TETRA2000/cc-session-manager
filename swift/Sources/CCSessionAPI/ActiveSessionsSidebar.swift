@@ -2,7 +2,7 @@
 import SwiftUI
 
 
-public struct ActiveSessionsSidebar: View {
+struct ActiveSessionsSidebar: View {
     let sessions: [ActiveSessionInfo]
     let selectedId: String?
     let onSelect: (String) -> Void
@@ -15,7 +15,7 @@ public struct ActiveSessionsSidebar: View {
         sessions.filter { !$0.hasAttention }
     }
 
-    public var body: some View {
+    var body: some View {
         List {
             if !needsAttention.isEmpty {
                 Section("Needs Attention") {
@@ -58,7 +58,7 @@ private struct SessionRow: View {
     let isSelected: Bool
     let onSelect: (String) -> Void
 
-    public var body: some View {
+    var body: some View {
         Button {
             onSelect(session.sessionId)
         } label: {
@@ -97,10 +97,10 @@ private struct SessionRow: View {
     }
 }
 
-public struct StatusBadge: View {
+struct StatusBadge: View {
     let status: String
 
-    public var body: some View {
+    var body: some View {
         Text(status.uppercased())
             .font(.system(size: 8, weight: .semibold, design: .monospaced))
             .padding(.horizontal, 5)
@@ -111,7 +111,7 @@ public struct StatusBadge: View {
     }
 }
 
-public func relativeTime(_ iso: String) -> String {
+func relativeTime(_ iso: String) -> String {
     guard let date = ISO8601DateFormatter().date(from: iso) else { return iso }
     let diff = Int(Date().timeIntervalSince(date))
     if diff < 60 { return "now" }

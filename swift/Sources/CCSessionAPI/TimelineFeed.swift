@@ -2,14 +2,14 @@
 import SwiftUI
 
 
-public struct TimelineFeed: View {
+struct TimelineFeed: View {
     let entries: [TimelineEntry]
     let pinnedEntries: [TimelineEntry]
     let hasMore: Bool
     let autoScrollEnabled: Bool
     let onLoadMore: () -> Void
 
-    public var body: some View {
+    var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -70,10 +70,10 @@ public struct TimelineFeed: View {
 
 // MARK: - Pinned Section
 
-public struct PinnedSection: View {
+struct PinnedSection: View {
     let entries: [TimelineEntry]
 
-    public var body: some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.circle.fill")
@@ -102,10 +102,10 @@ public struct PinnedSection: View {
 
 // MARK: - Time Separator
 
-public struct TimeSeparator: View {
+struct TimeSeparator: View {
     let label: String
 
-    public var body: some View {
+    var body: some View {
         HStack(spacing: 8) {
             Text(label)
                 .font(.system(size: 9, weight: .medium, design: .monospaced))

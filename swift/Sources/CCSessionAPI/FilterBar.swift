@@ -1,7 +1,7 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
-public struct FilterBar: View {
+struct FilterBar: View {
     let selected: String
     let counts: [String: Int]
     @Binding var autoScrollEnabled: Bool
@@ -14,7 +14,7 @@ public struct FilterBar: View {
         ("low", "Low"),
     ]
 
-    public var body: some View {
+    var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(filters, id: \.0) { key, label in
