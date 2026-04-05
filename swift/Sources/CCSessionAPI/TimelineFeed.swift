@@ -134,7 +134,7 @@ struct TimeGroup: Hashable {
     }
 }
 
-public func groupedByTime(_ entries: [TimelineEntry]) -> [TimeGroup] {
+func groupedByTime(_ entries: [TimelineEntry]) -> [TimeGroup] {
     var groups: [TimeGroup] = []
     var currentLabel: String?
     var currentItems: [TimelineEntry] = []
