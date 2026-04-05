@@ -46,9 +46,6 @@ jobs:
   swift-macos:
     name: Swift Tests (macOS)
     runs-on: macos-26
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -60,25 +57,5 @@ jobs:
           xcodebuild -version
 
       - name: Run tests
-        id: test
         working-directory: swift
-        run: swift test 2>&1 | tee /tmp/out.txt
-        continue-on-error: true
-
-      - name: Post errors
-        if: steps.test.outcome == 'failure' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const lines = fs.readFileSync('/tmp/out.txt', 'utf8').split('\n');
-            const errs = lines.filter(l => l.includes('error:') || l.includes('warning:') && l.includes('.swift'));
-            const body = `### Swift macOS errors\n\`\`\`\n${errs.slice(0,30).join('\n')}\n\`\`\``;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: context.issue.number, body
-            });
-
-      - name: Fail
-        if: steps.test.outcome == 'failure'
-        run: exit 1
+        run: swift test
