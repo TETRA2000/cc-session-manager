@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline — Claude Session Manager (Mockup — Dark)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Variables (Dark) ── */
+:root {
+  --bg-primary: #1a1a22;
+  --bg-secondary: #131318;
+  --bg-tertiary: #23232e;
+  --text-primary: #e8e6f0;
+  --text-secondary: #b0aec0;
+  --text-tertiary: #706e82;
+  --border-tertiary: rgba(255,255,255,0.08);
+  --border-secondary: rgba(255,255,255,0.15);
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --purple-fill: rgba(127,119,221,0.12);
+  --purple-text: #AFA9EC;
+  --blue-fill: rgba(24,95,165,0.12);
+  --blue-text: #85B7EB;
+  --green-fill: rgba(30,158,117,0.12);
+  --green-text: #5DCAA5;
+  --green-border: rgba(30,158,117,0.3);
+  --orange-text: #F0997B;
+  --red-fill: rgba(197,48,48,0.15);
+  --red-text: #FCA5A5;
+  --red-border: rgba(252,165,165,0.3);
+  --code-bg: #23232e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  padding: 24px;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  border: 0.5px solid var(--border-tertiary);
+}
+
+/* ── Header ── */
+.header {
+  padding: 14px 20px;
+  border-bottom: 0.5px solid var(--border-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #7F77DD; }
+.logo-text { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.4px; color: #7F77DD; }
+.header-actions { display: flex; gap: 6px; align-items: center; }
+.nav-link {
+  font-family: var(--font-mono); font-size: 10px; padding: 5px 12px;
+  border-radius: var(--radius-md); border: 0.5px solid var(--border-tertiary);
+  background: none; color: var(--text-secondary); cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center;
+}
+.nav-link:hover { background: var(--bg-secondary); }
+.nav-link.active { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; }
+
+/* ── Main layout: sidebar + feed ── */
+.main-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Active Sessions Sidebar ── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-tertiary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  padding: 14px 16px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  border-bottom: 0.5px solid var(--border-tertiary);
+}
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.sidebar-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 120ms ease;
+  margin-bottom: 2px;
+}
+.sidebar-session:hover { background: var(--bg-tertiary); }
+.sidebar-session.selected { background: rgba(127,119,221,0.1); }
+
+.presence-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.presence-dot.active { background: var(--green-text); }
+.presence-dot.remote { background: var(--blue-text); }
+
+.sidebar-info { flex: 1; min-width: 0; }
+.sidebar-project {
+  font-size: 12px; font-weight: 500; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.sidebar-meta {
+  font-family: var(--font-mono); font-size: 9px; color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.sidebar-badge {
+  display: inline-block; padding: 1px 5px; font-family: var(--font-mono);
+  font-size: 8px; font-weight: 600; letter-spacing: 0.4px; border-radius: 4px;
+}
+.sidebar-badge.active { background: var(--green-fill); color: var(--green-text); border: 1px solid var(--green-border); }
+.sidebar-badge.remote { background: var(--blue-fill); color: var(--blue-text); border: 1px solid rgba(124,184,232,0.3); }
+
+.attention-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--red-text);
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.sidebar-section-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px;
+  color: var(--text-tertiary); padding: 12px 10px 4px; font-weight: 500;
+}
+
+/* ── Feed Area ── */
+.feed-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Filter Bar ── */
+.filter-bar {
+  padding: 10px 20px;
+  border-bottom: 0.5px solid var(--border-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px;
+  color: var(--text-tertiary); font-weight: 500;
+}
+.filter-btn {
+  font-family: var(--font-mono); font-size: 10px; padding: 4px 10px;
+  border-radius: 14px; border: 0.5px solid var(--border-tertiary);
+  background: none; color: var(--text-secondary); cursor: pointer;
+}
+.filter-btn:hover { background: var(--bg-tertiary); }
+.filter-btn.active { background: var(--purple-fill); color: var(--purple-text); border-color: rgba(127,119,221,0.3); font-weight: 500; }
+.filter-btn .count {
+  font-size: 9px; background: var(--bg-tertiary); padding: 1px 5px;
+  border-radius: 8px; margin-left: 4px; color: var(--text-tertiary);
+}
+.filter-btn.active .count { background: rgba(127,119,221,0.15); color: var(--purple-text); }
+
+.filter-spacer { flex: 1; }
+
+.search-box {
+  font-family: var(--font-mono); font-size: 11px; padding: 5px 10px;
+  width: 200px; background: var(--bg-tertiary); border: 0.5px solid var(--border-tertiary);
+  border-radius: var(--radius-md); color: var(--text-primary); outline: none;
+}
+.search-box::placeholder { color: var(--text-tertiary); }
+
+/* ── Timeline Feed ── */
+.feed-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+/* ── Time separator ── */
+.time-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+}
+.time-separator:first-child { margin-top: 0; }
+.time-separator-line { flex: 1; height: 0.5px; background: var(--border-tertiary); }
+.time-separator-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px;
+  color: var(--text-tertiary); font-weight: 500; flex-shrink: 0;
+}
+
+/* ── Feed Entry ── */
+.feed-entry {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 120ms ease;
+  margin-bottom: 4px;
+  position: relative;
+}
+.feed-entry:hover { background: var(--bg-tertiary); }
+
+.feed-avatar {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.feed-avatar.assistant { background: var(--purple-fill); color: var(--purple-text); }
+.feed-avatar.user { background: var(--blue-fill); color: var(--blue-text); }
+.feed-avatar.system { background: var(--bg-tertiary); color: var(--text-tertiary); }
+
+.feed-body { flex: 1; min-width: 0; }
+.feed-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.feed-role {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.feed-role.assistant { color: var(--purple-text); }
+.feed-role.user { color: var(--blue-text); }
+
+.feed-project-tag {
+  font-family: var(--font-mono); font-size: 9px; padding: 1px 6px;
+  border-radius: 3px; background: var(--bg-tertiary); color: var(--text-secondary);
+}
+.feed-time {
+  font-family: var(--font-mono); font-size: 9px; color: var(--text-tertiary);
+  margin-left: auto;
+}
+.feed-text {
+  font-size: 13px; line-height: 1.6; color: var(--text-secondary);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Importance indicators ── */
+.importance-bar {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 2px;
+}
+.importance-bar.high { background: var(--red-text); }
+.importance-bar.normal { background: transparent; }
+
+/* ── Attention entry (highlighted) ── */
+.feed-entry.attention {
+  background: rgba(252,165,165,0.06);
+  border: 0.5px solid rgba(252,165,165,0.15);
+}
+.feed-entry.attention:hover { background: rgba(252,165,165,0.1); }
+
+.attention-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+  padding: 2px 7px; border-radius: 4px;
+  background: var(--red-fill); color: var(--red-text);
+  border: 1px solid var(--red-border);
+}
+
+/* ── Session group indicator ── */
+.session-group-label {
+  font-family: var(--font-mono); font-size: 9px; color: var(--text-tertiary);
+  padding: 4px 14px 4px 58px;
+  display: flex; align-items: center; gap: 6px;
+}
+.session-group-label::before {
+  content: '';
+  display: inline-block;
+  width: 12px; height: 0.5px; background: var(--border-tertiary);
+}
+
+/* ── Tool call compact ── */
+.feed-tool {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 10px;
+  padding: 3px 8px; border-radius: 4px;
+  background: var(--bg-tertiary); color: var(--orange-text);
+  border: 0.5px solid var(--border-tertiary);
+  margin-top: 6px;
+}
+
+/* ── Badges ── */
+.badge-active {
+  display: inline-block; padding: 1px 6px; font-family: var(--font-mono);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.5px; border-radius: 4px;
+  background: var(--green-fill); color: var(--green-text); border: 1px solid var(--green-border);
+}
+.badge-remote {
+  display: inline-block; padding: 1px 6px; font-family: var(--font-mono);
+  font-size: 9px; font-weight: 600; letter-spacing: 0.5px; border-radius: 4px;
+  background: var(--blue-fill); color: var(--blue-text); border: 1px solid rgba(124,184,232,0.3);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">CLAUDE SESSION MANAGER</span>
+    </div>
+    <div class="header-actions">
+      <a class="nav-link" href="#">DASHBOARD</a>
+      <a class="nav-link" href="#">PROJECTS</a>
+      <a class="nav-link active" href="#">TIMELINE</a>
+      <a class="nav-link" href="#">NEW PROJECT</a>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Active Sessions Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">ACTIVE SESSIONS</div>
+      <div class="sidebar-scroll">
+        <div class="sidebar-section-label">NEEDS ATTENTION</div>
+
+        <div class="sidebar-session">
+          <div class="presence-dot active"></div>
+          <div class="sidebar-info">
+            <div class="sidebar-project">cc-session-manager</div>
+            <div class="sidebar-meta">3m ago &middot; <span class="sidebar-badge active">ACTIVE</span></div>
+          </div>
+          <div class="attention-dot"></div>
+        </div>
+
+        <div class="sidebar-section-label">RUNNING</div>
+
+        <div class="sidebar-session">
+          <div class="presence-dot active"></div>
+          <div class="sidebar-info">
+            <div class="sidebar-project">api-gateway</div>
+            <div class="sidebar-meta">12m ago &middot; <span class="sidebar-badge active">ACTIVE</span></div>
+          </div>
+        </div>
+
+        <div class="sidebar-session">
+          <div class="presence-dot remote"></div>
+          <div class="sidebar-info">
+            <div class="sidebar-project">design-system</div>
+            <div class="sidebar-meta">28m ago &middot; <span class="sidebar-badge remote">REMOTE</span></div>
+          </div>
+        </div>
+
+        <div class="sidebar-session">
+          <div class="presence-dot active"></div>
+          <div class="sidebar-info">
+            <div class="sidebar-project">ml-pipeline</div>
+            <div class="sidebar-meta">45m ago &middot; <span class="sidebar-badge active">ACTIVE</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feed Area -->
+    <div class="feed-area">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <span class="filter-label">SHOW:</span>
+        <button class="filter-btn active">All <span class="count">47</span></button>
+        <button class="filter-btn">High <span class="count">3</span></button>
+        <button class="filter-btn">Normal <span class="count">28</span></button>
+        <button class="filter-btn">Low <span class="count">16</span></button>
+        <div class="filter-spacer"></div>
+        <input class="search-box" placeholder="Search timeline..." />
+      </div>
+
+      <!-- Timeline Feed -->
+      <div class="feed-scroll">
+        <!-- Time Group: Now -->
+        <div class="time-separator">
+          <span class="time-separator-label">JUST NOW</span>
+          <div class="time-separator-line"></div>
+        </div>
+
+        <!-- Attention-required entry -->
+        <div class="feed-entry attention">
+          <div class="importance-bar high"></div>
+          <div class="feed-avatar assistant">AI</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role assistant">ASSISTANT</span>
+              <span class="feed-project-tag">cc-session-manager</span>
+              <span class="badge-active">ACTIVE</span>
+              <span class="attention-badge">&#9888; NEEDS INPUT</span>
+              <span class="feed-time">2m ago</span>
+            </div>
+            <div class="feed-text">
+              I need permission to run <code style="font-family:var(--font-mono);font-size:12px;background:var(--code-bg);padding:1px 5px;border-radius:3px;color:var(--orange-text)">git push -u origin feature/timeline</code> to push the changes to the remote branch. Should I proceed?
+            </div>
+          </div>
+        </div>
+
+        <!-- Normal entry -->
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar assistant">AI</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role assistant">ASSISTANT</span>
+              <span class="feed-project-tag">api-gateway</span>
+              <span class="badge-active">ACTIVE</span>
+              <span class="feed-time">5m ago</span>
+            </div>
+            <div class="feed-text">
+              I've refactored the authentication middleware to use the new JWT validation library. The rate limiter now properly handles burst traffic with a token bucket algorithm.
+            </div>
+            <div class="feed-tool">&#9881; Edit &middot; src/middleware/auth.ts</div>
+          </div>
+        </div>
+
+        <div class="session-group-label">continued from api-gateway</div>
+
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar user">U</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role user">USER</span>
+              <span class="feed-project-tag">api-gateway</span>
+              <span class="feed-time">6m ago</span>
+            </div>
+            <div class="feed-text">
+              Can you also update the rate limiting middleware to handle burst traffic better? The current fixed-window approach drops legitimate requests.
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Group: Earlier -->
+        <div class="time-separator">
+          <span class="time-separator-label">15 MINUTES AGO</span>
+          <div class="time-separator-line"></div>
+        </div>
+
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar assistant">AI</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role assistant">ASSISTANT</span>
+              <span class="feed-project-tag">design-system</span>
+              <span class="badge-remote">REMOTE</span>
+              <span class="feed-time">18m ago</span>
+            </div>
+            <div class="feed-text">
+              Updated the Button component to support the new size variants. Added unit tests for all 3 sizes (sm, md, lg) and visual regression tests. The Storybook stories have been updated as well.
+            </div>
+            <div class="feed-tool">&#9881; Edit &middot; src/components/Button.tsx</div>
+          </div>
+        </div>
+
+        <!-- Attention entry: question -->
+        <div class="feed-entry attention">
+          <div class="importance-bar high"></div>
+          <div class="feed-avatar assistant">AI</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role assistant">ASSISTANT</span>
+              <span class="feed-project-tag">ml-pipeline</span>
+              <span class="badge-active">ACTIVE</span>
+              <span class="attention-badge">&#63; QUESTION</span>
+              <span class="feed-time">22m ago</span>
+            </div>
+            <div class="feed-text">
+              The training dataset has 3 different date formats (ISO 8601, Unix timestamps, and MM/DD/YYYY). Should I normalize all dates to ISO 8601 during preprocessing, or should we preserve the original formats and handle conversion at query time?
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Group: 30 min -->
+        <div class="time-separator">
+          <span class="time-separator-label">30 MINUTES AGO</span>
+          <div class="time-separator-line"></div>
+        </div>
+
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar assistant">AI</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role assistant">ASSISTANT</span>
+              <span class="feed-project-tag">api-gateway</span>
+              <span class="feed-time">32m ago</span>
+            </div>
+            <div class="feed-text">
+              Completed the database migration script. Added indexes on `user_id` and `created_at` columns for the sessions table. All existing tests pass after the schema changes.
+            </div>
+            <div class="feed-tool">&#9881; Write &middot; migrations/002_add_indexes.sql</div>
+          </div>
+        </div>
+
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar assistant">AI</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role assistant">ASSISTANT</span>
+              <span class="feed-project-tag">cc-session-manager</span>
+              <span class="feed-time">38m ago</span>
+            </div>
+            <div class="feed-text">
+              Generated timeline feature requirements with EARS acceptance criteria. Five requirement areas: unified feed, importance filtering, attention highlighting, active sessions sidebar, and timeline navigation.
+            </div>
+          </div>
+        </div>
+
+        <!-- Error attention entry -->
+        <div class="feed-entry attention">
+          <div class="importance-bar high"></div>
+          <div class="feed-avatar system">!</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role" style="color:var(--red-text)">ERROR</span>
+              <span class="feed-project-tag">ml-pipeline</span>
+              <span class="attention-badge">&#9888; ERROR</span>
+              <span class="feed-time">41m ago</span>
+            </div>
+            <div class="feed-text">
+              Test suite failed: 2 of 14 tests failed in <code style="font-family:var(--font-mono);font-size:12px;background:var(--code-bg);padding:1px 5px;border-radius:3px;color:var(--orange-text)">tests/preprocessing.test.py</code>. The date normalization function throws ValueError for edge cases with timezone offsets.
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Group: 1 hour -->
+        <div class="time-separator">
+          <span class="time-separator-label">1 HOUR AGO</span>
+          <div class="time-separator-line"></div>
+        </div>
+
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar user">U</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role user">USER</span>
+              <span class="feed-project-tag">design-system</span>
+              <span class="feed-time">1h ago</span>
+            </div>
+            <div class="feed-text">
+              Please add sm, md, and lg size variants to the Button component. Follow the spacing scale from the design tokens.
+            </div>
+          </div>
+        </div>
+
+        <div class="feed-entry">
+          <div class="importance-bar normal"></div>
+          <div class="feed-avatar user">U</div>
+          <div class="feed-body">
+            <div class="feed-header">
+              <span class="feed-role user">USER</span>
+              <span class="feed-project-tag">ml-pipeline</span>
+              <span class="feed-time">1h ago</span>
+            </div>
+            <div class="feed-text">
+              Set up the data preprocessing pipeline for the new recommendation model. Start with date normalization and null value handling.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

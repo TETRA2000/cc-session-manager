@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deno:
+    name: Deno Tests
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type check
+        run: deno check --no-lock main.ts
+
+      - name: Run tests
+        run: |
+          mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions"
+          deno test --no-lock \
+            --allow-read=$HOME/.claude,.,/var/folders,/tmp \
+            --allow-env=HOME,PROJECTS_ROOT \
+            --allow-write=/var/folders,/tmp \
+            --allow-run=git \
+            --ignore=tests/pty-manager.test.ts \
+            tests/
+
+  swift-linux:
+    name: Swift Tests (Linux)
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        working-directory: swift
+        run: swift test
+
+  swift-macos:
+    name: Swift Tests (macOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using $LATEST"
+          sudo xcode-select -s "$LATEST"
+          xcodebuild -version
+
+      - name: Run tests
+        working-directory: swift
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee /tmp/swift-test.log
+
+      - name: Show errors on failure
+        if: failure()
+        run: grep -i "error:" /tmp/swift-test.log || tail -30 /tmp/swift-test.log

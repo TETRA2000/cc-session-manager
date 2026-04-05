@@ -132,7 +132,7 @@ final class ModelsTests: XCTestCase {
         let entry = try JSONDecoder().decode(ToolCallEntry.self, from: json)
         XCTAssertEqual(entry.name, "Read")
         XCTAssertEqual(entry.input["file_path"], .string("/src/auth.ts"))
-        XCTAssertEqual(entry.result, "file contents...")
+        XCTAssertEqual(entry.resultText, "file contents...")
         XCTAssertEqual(entry.isError, false)
     }
 
@@ -172,6 +172,85 @@ final class ModelsTests: XCTestCase {
         let entry = try JSONDecoder().decode(TranscriptEntry.self, from: json)
         XCTAssertEqual(entry.tokens?.input, 1500)
         XCTAssertEqual(entry.tokens?.output, 800)
+    }
+
+    // MARK: - Timeline
+
+    func testTimelineEntryDecode() throws {
+        let json = Data("""
+        {
+            "uuid": "tl-entry-001",
+            "sessionId": "session-abc-123",
+            "projectId": "test-project",
+            "projectName": "my-app",
+            "sessionSummary": "Fix auth bug",
+            "type": "assistant",
+            "text": "I'll fix the authentication issue.",
+            "importance": "high",
+            "isAttention": true,
+            "timestamp": "2026-03-28T10:00:05.000Z",
+            "model": "claude-sonnet-4-20250514",
+            "toolNames": ["Read", "Edit"],
+            "isRemoteConnected": false
+        }
+        """.utf8)
+        let entry = try JSONDecoder().decode(TimelineEntry.self, from: json)
+        XCTAssertEqual(entry.uuid, "tl-entry-001")
+        XCTAssertEqual(entry.sessionId, "session-abc-123")
+        XCTAssertEqual(entry.projectName, "my-app")
+        XCTAssertEqual(entry.importance, "high")
+        XCTAssertTrue(entry.isAttention)
+        XCTAssertEqual(entry.toolNames, ["Read", "Edit"])
+        XCTAssertEqual(entry.id, "tl-entry-001")
+    }
+
+    func testActiveSessionInfoDecode() throws {
+        let json = Data("""
+        {
+            "sessionId": "session-abc-123",
+            "projectId": "test-project",
+            "projectName": "my-app",
+            "status": "active",
+            "lastActivity": "2026-03-28T10:00:12.000Z",
+            "hasAttention": true,
+            "isRemoteConnected": false
+        }
+        """.utf8)
+        let session = try JSONDecoder().decode(ActiveSessionInfo.self, from: json)
+        XCTAssertEqual(session.sessionId, "session-abc-123")
+        XCTAssertEqual(session.status, "active")
+        XCTAssertTrue(session.hasAttention)
+        XCTAssertEqual(session.id, "session-abc-123")
+    }
+
+    func testTimelineResponseDecode() throws {
+        let json = Data("""
+        {
+            "entries": [{
+                "uuid": "tl-001",
+                "sessionId": "s1",
+                "projectId": "p1",
+                "projectName": "app",
+                "sessionSummary": null,
+                "type": "user",
+                "text": "Hello",
+                "importance": "normal",
+                "isAttention": false,
+                "timestamp": "2026-03-28T10:00:00.000Z",
+                "model": null,
+                "toolNames": [],
+                "isRemoteConnected": false
+            }],
+            "activeSessions": [],
+            "hasMore": true,
+            "oldestTimestamp": "2026-03-28T10:00:00.000Z"
+        }
+        """.utf8)
+        let response = try JSONDecoder().decode(TimelineResponse.self, from: json)
+        XCTAssertEqual(response.entries.count, 1)
+        XCTAssertTrue(response.activeSessions.isEmpty)
+        XCTAssertTrue(response.hasMore)
+        XCTAssertEqual(response.oldestTimestamp, "2026-03-28T10:00:00.000Z")
     }
 
     // MARK: - APIError

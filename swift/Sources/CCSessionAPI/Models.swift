@@ -187,6 +187,45 @@ public struct TranscriptResponse: Codable, Sendable {
     public let entries: [TranscriptEntry]
 }
 
+// MARK: - Timeline
+
+public struct TimelineEntry: Codable, Sendable, Identifiable {
+    public let uuid: String
+    public let sessionId: String
+    public let projectId: String
+    public let projectName: String
+    public let sessionSummary: String?
+    public let type: String
+    public let text: String?
+    public let importance: String
+    public let isAttention: Bool
+    public let timestamp: String
+    public let model: String?
+    public let toolNames: [String]
+    public let isRemoteConnected: Bool
+
+    public var id: String { uuid }
+}
+
+public struct ActiveSessionInfo: Codable, Sendable, Identifiable {
+    public let sessionId: String
+    public let projectId: String
+    public let projectName: String
+    public let status: String
+    public let lastActivity: String
+    public let hasAttention: Bool
+    public let isRemoteConnected: Bool
+
+    public var id: String { sessionId }
+}
+
+public struct TimelineResponse: Codable, Sendable {
+    public let entries: [TimelineEntry]
+    public let activeSessions: [ActiveSessionInfo]
+    public let hasMore: Bool
+    public let oldestTimestamp: String?
+}
+
 // MARK: - Launch
 
 public struct LaunchRequest: Codable, Sendable {

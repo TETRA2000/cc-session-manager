@@ -7,6 +7,7 @@ const routes = [
   { pattern: /^\/$/, path: "/" },
   { pattern: /^\/projects$/, path: "/projects" },
   { pattern: /^\/new-project$/, path: "/new-project" },
+  { pattern: /^\/timeline$/, path: "/timeline" },
   { pattern: /^\/transcript\/(.+)$/, path: "/transcript/:sessionId" },
 ];
 

@@ -59,6 +59,26 @@ public final class SessionClient: Sendable {
         try await get("/api/sessions/\(sessionId)/transcript")
     }
 
+    // MARK: - Timeline
+
+    public func getTimeline(
+        limit: Int? = nil,
+        before: String? = nil,
+        importance: String? = nil
+    ) async throws -> TimelineResponse {
+        var path = "/api/timeline"
+        var params: [String] = []
+        if let limit = limit { params.append("limit=\(limit)") }
+        if let before = before {
+            params.append("before=\(before.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? before)")
+        }
+        if let importance = importance, importance != "all" {
+            params.append("importance=\(importance)")
+        }
+        if !params.isEmpty { path += "?" + params.joined(separator: "&") }
+        return try await get(path)
+    }
+
     // MARK: - Launch
 
     public func launchSession(_ request: LaunchRequest) async throws -> LaunchResult {
@@ -105,8 +125,12 @@ public final class SessionClient: Sendable {
 
     private static let session: URLSession = {
         let config = URLSessionConfiguration.default
+        #if canImport(Security)
         let delegate = InsecureSessionDelegate()
         return URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+        #else
+        return URLSession(configuration: config)
+        #endif
     }()
 
     private func performRequest(_ request: URLRequest) async throws -> (Data, URLResponse) {
@@ -157,6 +181,7 @@ private struct ErrorBody: Decodable {
     let error: String?
 }
 
+#if canImport(Security)
 /// Allows plain HTTP connections by accepting all server trust challenges.
 /// Used for local/Tailscale servers that don't have TLS certificates.
 private final class InsecureSessionDelegate: NSObject, URLSessionDelegate, Sendable {
@@ -171,3 +196,4 @@ private final class InsecureSessionDelegate: NSObject, URLSessionDelegate, Senda
         return (.performDefaultHandling, nil)
     }
 }
+#endif

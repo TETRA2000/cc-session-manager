@@ -19,6 +19,10 @@ export function Header() {
           href="/projects"
           class=${`nav-link${currentPath === "/projects" ? " active" : ""}`}
         >Projects<//>
+        <${Link}
+          href="/timeline"
+          class=${`nav-link${currentPath === "/timeline" ? " active" : ""}`}
+        >Timeline<//>
         <button class="btn btn-accent" onclick=${() => navigate("/new-project")}>+ New project</button>
       </div>
     </div>

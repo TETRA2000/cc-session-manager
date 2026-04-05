@@ -42,6 +42,15 @@ export async function launchSession({ mode, projectId, projectPath, sessionId, p
   return data;
 }
 
+export async function getTimeline({ limit, before, importance } = {}) {
+  const params = new URLSearchParams();
+  if (limit) params.set("limit", String(limit));
+  if (before) params.set("before", before);
+  if (importance && importance !== "all") params.set("importance", importance);
+  const qs = params.toString();
+  return fetchJSON(`/api/timeline${qs ? "?" + qs : ""}`);
+}
+
 export async function createProject(req) {
   const res = await fetch("/api/projects/create", {
     method: "POST",

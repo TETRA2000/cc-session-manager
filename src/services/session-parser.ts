@@ -1,10 +1,12 @@
 import type {
   AssistantMessage,
   ContentBlock,
+  ImportanceLevel,
   JournalLine,
   SessionSummary,
   SystemMessage,
   TextBlock,
+  TimelineEntry,
   ToolCallEntry,
   ToolResultBlock,
   ToolUseBlock,
@@ -314,6 +316,171 @@ export async function extractCwd(filePath: string): Promise<string | null> {
     file.close();
   }
   return null;
+}
+
+// ─── Importance classification ───
+
+export function classifyImportance(
+  entry: TranscriptEntry,
+  isLastInActiveSession: boolean,
+): { importance: ImportanceLevel; isAttention: boolean } {
+  // Tool-only messages (no text) are low importance
+  if (entry.type === "assistant" && !entry.text && entry.toolCalls.length > 0) {
+    return { importance: "low", isAttention: false };
+  }
+
+  // System error messages
+  if (entry.type === "system") {
+    return { importance: "high", isAttention: isLastInActiveSession };
+  }
+
+  // Check for error tool results
+  const hasError = entry.toolCalls.some((tc) => tc.isError);
+  if (hasError) {
+    return { importance: "high", isAttention: isLastInActiveSession };
+  }
+
+  // Assistant messages with questions or AskUserQuestion tool
+  // Only high when it's the last message in an active session (still unanswered)
+  if (entry.type === "assistant" && isLastInActiveSession) {
+    const hasQuestion = entry.text?.trimEnd().endsWith("?") ?? false;
+    const hasAskUser = entry.toolCalls.some((tc) => tc.name === "AskUserQuestion");
+    if (hasQuestion || hasAskUser) {
+      return { importance: "high", isAttention: true };
+    }
+  }
+
+  // User messages are always normal
+  if (entry.type === "user") {
+    return { importance: "normal", isAttention: false };
+  }
+
+  // Default assistant text responses are normal
+  return { importance: "normal", isAttention: false };
+}
+
+// ─── Lightweight timeline entry extraction ───
+
+type RawTimelineEntry = Omit<TimelineEntry, "importance" | "isAttention" | "projectName" | "sessionSummary" | "isRemoteConnected">;
+
+export interface TimelineExtractionResult {
+  entries: RawTimelineEntry[];
+  summary: string;
+  isRemoteConnected: boolean;
+}
+
+export async function extractTimelineEntries(
+  filePath: string,
+  sessionId: string,
+  projectId: string,
+  options?: { limit?: number; before?: string },
+): Promise<TimelineExtractionResult> {
+  const entries: RawTimelineEntry[] = [];
+  let firstUserText = "";
+  let isRemoteConnected = false;
+
+  for await (const line of readJsonlStream(filePath)) {
+    // Track remote control state (same logic as extractSessionMetadata)
+    if (line.type === "system") {
+      const sMsg = line as SystemMessage;
+      if (sMsg.subtype === "bridge_status") {
+        const rawLine = line as unknown as Record<string, unknown>;
+        if (typeof rawLine.url === "string") {
+          isRemoteConnected = true;
+        }
+      } else if (sMsg.subtype === "local_command" && sMsg.content?.includes("Remote Control disconnected")) {
+        isRemoteConnected = false;
+      }
+    }
+
+    if (!isDisplayable(line) || line.isMeta) continue;
+
+    // Extract first user text for summary
+    if (!firstUserText && line.type === "user") {
+      const uMsg = line as UserMessage;
+      const text = extractTextFromContent(uMsg.message.content);
+      if (text) {
+        firstUserText = text.length > 120 ? text.slice(0, 120) + "..." : text;
+      }
+    }
+
+    const timestamp = line.timestamp ?? "";
+
+    // Apply before filter
+    if (options?.before && timestamp >= options.before) continue;
+
+    if (line.type === "user") {
+      const uMsg = line as UserMessage;
+      const text = extractTextFromContent(uMsg.message.content);
+
+      // Skip user messages that are only tool results
+      if (Array.isArray(uMsg.message.content)) {
+        const hasText = uMsg.message.content.some((b) => b.type === "text");
+        const hasToolResult = uMsg.message.content.some((b) => b.type === "tool_result");
+        if (!hasText && hasToolResult) continue;
+      }
+
+      entries.push({
+        uuid: uMsg.uuid ?? crypto.randomUUID(),
+        sessionId,
+        projectId,
+        type: "user",
+        text: text ? (text.length > 200 ? text.slice(0, 200) + "..." : text) : null,
+        timestamp,
+        model: null,
+        toolNames: [],
+      });
+    } else if (line.type === "assistant") {
+      const aMsg = line as AssistantMessage;
+      const textParts: string[] = [];
+      const toolNames: string[] = [];
+
+      for (const block of aMsg.message.content) {
+        if (block.type === "text") {
+          textParts.push((block as TextBlock).text);
+        } else if (block.type === "tool_use") {
+          toolNames.push((block as ToolUseBlock).name);
+        }
+      }
+
+      const text = textParts.join("\n");
+      entries.push({
+        uuid: aMsg.uuid ?? crypto.randomUUID(),
+        sessionId,
+        projectId,
+        type: "assistant",
+        text: text ? (text.length > 200 ? text.slice(0, 200) + "..." : text) : null,
+        timestamp,
+        model: aMsg.message.model ?? null,
+        toolNames,
+      });
+    } else if (line.type === "system") {
+      entries.push({
+        uuid: line.uuid ?? crypto.randomUUID(),
+        sessionId,
+        projectId,
+        type: "system",
+        text: (line as SystemMessage).content ?? null,
+        timestamp,
+        model: null,
+        toolNames: [],
+      });
+    }
+  }
+
+  // Sort by timestamp descending (newest first)
+  entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+  // Apply limit
+  const limited = (options?.limit && entries.length > options.limit)
+    ? entries.slice(0, options.limit)
+    : entries;
+
+  return {
+    entries: limited,
+    summary: firstUserText || "(no content)",
+    isRemoteConnected,
+  };
 }
 
 // ─── Helpers ───
