@@ -15,7 +15,7 @@ public struct ActiveSessionsSidebar: View {
         sessions.filter { !$0.hasAttention }
     }
 
-    var body: some View {
+    public var body: some View {
         List {
             if !needsAttention.isEmpty {
                 Section("Needs Attention") {
@@ -58,7 +58,7 @@ private struct SessionRow: View {
     let isSelected: Bool
     let onSelect: (String) -> Void
 
-    var body: some View {
+    public var body: some View {
         Button {
             onSelect(session.sessionId)
         } label: {
@@ -100,7 +100,7 @@ private struct SessionRow: View {
 public struct StatusBadge: View {
     let status: String
 
-    var body: some View {
+    public var body: some View {
         Text(status.uppercased())
             .font(.system(size: 8, weight: .semibold, design: .monospaced))
             .padding(.horizontal, 5)

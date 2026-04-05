@@ -9,7 +9,7 @@ public struct TimelineFeed: View {
     let autoScrollEnabled: Bool
     let onLoadMore: () -> Void
 
-    var body: some View {
+    public var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -73,7 +73,7 @@ public struct TimelineFeed: View {
 public struct PinnedSection: View {
     let entries: [TimelineEntry]
 
-    var body: some View {
+    public var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.circle.fill")
@@ -105,7 +105,7 @@ public struct PinnedSection: View {
 public struct TimeSeparator: View {
     let label: String
 
-    var body: some View {
+    public var body: some View {
         HStack(spacing: 8) {
             Text(label)
                 .font(.system(size: 9, weight: .medium, design: .monospaced))

@@ -14,7 +14,7 @@ public struct FilterBar: View {
         ("low", "Low"),
     ]
 
-    var body: some View {
+    public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(filters, id: \.0) { key, label in
