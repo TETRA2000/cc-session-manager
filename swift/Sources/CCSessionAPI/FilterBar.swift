@@ -1,7 +1,7 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
-struct FilterBar: View {
+public struct FilterBar: View {
     let selected: String
     let counts: [String: Int]
     @Binding var autoScrollEnabled: Bool

@@ -1,8 +1,8 @@
 #if canImport(SwiftUI)
 import SwiftUI
-import CCSessionAPI
 
-struct TimelineFeed: View {
+
+public struct TimelineFeed: View {
     let entries: [TimelineEntry]
     let pinnedEntries: [TimelineEntry]
     let hasMore: Bool
@@ -70,7 +70,7 @@ struct TimelineFeed: View {
 
 // MARK: - Pinned Section
 
-struct PinnedSection: View {
+public struct PinnedSection: View {
     let entries: [TimelineEntry]
 
     var body: some View {
@@ -102,7 +102,7 @@ struct PinnedSection: View {
 
 // MARK: - Time Separator
 
-struct TimeSeparator: View {
+public struct TimeSeparator: View {
     let label: String
 
     var body: some View {
@@ -134,7 +134,7 @@ struct TimeGroup: Hashable {
     }
 }
 
-func groupedByTime(_ entries: [TimelineEntry]) -> [TimeGroup] {
+public func groupedByTime(_ entries: [TimelineEntry]) -> [TimeGroup] {
     var groups: [TimeGroup] = []
     var currentLabel: String?
     var currentItems: [TimelineEntry] = []

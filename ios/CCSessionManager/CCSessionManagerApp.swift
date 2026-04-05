@@ -1,4 +1,5 @@
 import SwiftUI
+import CCSessionAPI
 
 @main
 struct CCSessionManagerApp: App {
@@ -19,11 +20,19 @@ struct CCSessionManagerApp: App {
 }
 
 struct MainTabView: View {
+    @Environment(AppState.self) private var appState
+    @State private var timelineViewModel = TimelineViewModel()
+
     var body: some View {
         TabView {
             DashboardView()
                 .tabItem {
                     Label("Dashboard", systemImage: "chart.bar")
+                }
+
+            TimelineView(viewModel: timelineViewModel)
+                .tabItem {
+                    Label("Timeline", systemImage: "list.bullet")
                 }
 
             ProjectListView()
@@ -37,6 +46,14 @@ struct MainTabView: View {
             .tabItem {
                 Label("Terminal", systemImage: "terminal")
             }
+        }
+        .onAppear {
+            if let client = appState.client {
+                timelineViewModel.connect(client: client)
+            }
+        }
+        .onDisappear {
+            timelineViewModel.disconnect()
         }
     }
 }

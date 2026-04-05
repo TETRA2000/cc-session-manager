@@ -1,8 +1,8 @@
 #if canImport(SwiftUI)
 import SwiftUI
-import CCSessionAPI
 
-struct FeedEntryView: View {
+
+public struct FeedEntryView: View {
     let entry: TimelineEntry
     @State private var expanded = false
 
@@ -117,7 +117,7 @@ struct FeedEntryView: View {
     }
 }
 
-struct AttentionBadge: View {
+public struct AttentionBadge: View {
     let type: String
 
     var body: some View {

@@ -1,8 +1,8 @@
 #if canImport(SwiftUI)
 import SwiftUI
-import CCSessionAPI
 
-struct ActiveSessionsSidebar: View {
+
+public struct ActiveSessionsSidebar: View {
     let sessions: [ActiveSessionInfo]
     let selectedId: String?
     let onSelect: (String) -> Void
@@ -97,7 +97,7 @@ private struct SessionRow: View {
     }
 }
 
-struct StatusBadge: View {
+public struct StatusBadge: View {
     let status: String
 
     var body: some View {
@@ -111,7 +111,7 @@ struct StatusBadge: View {
     }
 }
 
-func relativeTime(_ iso: String) -> String {
+public func relativeTime(_ iso: String) -> String {
     guard let date = ISO8601DateFormatter().date(from: iso) else { return iso }
     let diff = Int(Date().timeIntervalSince(date))
     if diff < 60 { return "now" }
