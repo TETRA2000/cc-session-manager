@@ -198,6 +198,11 @@ stateDiagram-v2
 | FeedScroll | Frontend/Component | Scrollable feed with auto-scroll | 1.3, 6.1-6.5, 7.4 | TimelineView state (P0) | State |
 | FilterBar | Frontend/Component | Importance filter pills | 2.2-2.5 | TimelineView state (P0) | — |
 | FeedEntry | Frontend/Component | Individual timeline entry | 1.2, 1.5, 2.5, 3.2, 7.1-7.3 | — | — |
+| TimelineEntry (Swift) | iOS/Model | Swift Codable model for timeline entries | 1.2, 2.1, 7.1, 7.2 | — | — |
+| ActiveSessionInfo (Swift) | iOS/Model | Swift Codable model for active sessions | 4.1, 4.2 | — | — |
+| TimelineResponse (Swift) | iOS/Model | Swift Codable model for API response | 1.1 | — | — |
+| SessionClient.getTimeline | iOS/API | REST client method for GET /api/timeline | 1.1, 2.2 | SessionClient (P0) | API |
+| TimelineCmd | iOS/CLI | CLI subcommand for timeline display | 1.1, 2.1, 4.1 | SessionClient (P0) | — |
 
 ### Backend / Route Layer
 
@@ -411,6 +416,76 @@ Renders individual timeline entry: avatar, role label, project tag, importance b
 #### FilterBar — Summary only
 
 Row of pill buttons (All, High, Normal, Low) with counts. Active pill highlighted. Changing selection triggers parent `setSelectedImportance()` which re-fetches with updated `?importance=` param. Counts are computed client-side from the full response to avoid extra requests.
+
+### iOS Client Layer (Swift)
+
+#### Timeline Swift Models
+
+| Field | Detail |
+|-------|--------|
+| Intent | Swift Codable types that mirror the backend TimelineResponse, TimelineEntry, and ActiveSessionInfo TypeScript interfaces |
+| Requirements | 1.1, 1.2, 2.1, 4.1, 4.2, 7.1, 7.2 |
+
+**Responsibilities & Constraints**
+- `TimelineEntry`: Codable, Sendable, Identifiable (via uuid). All fields match backend API response.
+- `ActiveSessionInfo`: Codable, Sendable, Identifiable (via sessionId). Matches backend response.
+- `TimelineResponse`: Contains `entries`, `activeSessions`, `hasMore`, `oldestTimestamp`.
+- Lives in `swift/Sources/CCSessionAPI/Models.swift` alongside existing models.
+
+**Contracts**: API [x]
+
+---
+
+#### SessionClient.getTimeline
+
+| Field | Detail |
+|-------|--------|
+| Intent | REST client method to call GET /api/timeline with optional query parameters |
+| Requirements | 1.1, 2.2 |
+
+**Responsibilities & Constraints**
+- Accepts optional `limit`, `before`, `importance` parameters
+- Builds query string and calls existing `get()` infrastructure
+- Returns decoded `TimelineResponse`
+
+**Contracts**: API [x]
+
+##### API Contract
+
+```swift
+public func getTimeline(
+    limit: Int? = nil,
+    before: String? = nil,
+    importance: String? = nil
+) async throws -> TimelineResponse
+```
+
+**Implementation Notes**
+- Lives in `swift/Sources/CCSessionAPI/SessionClient.swift`
+- Uses existing `buildRequest()` and `get()` infrastructure
+- Query params appended to URL via URLComponents
+
+---
+
+#### TimelineCmd (CLI)
+
+| Field | Detail |
+|-------|--------|
+| Intent | CLI subcommand to display timeline feed with active sessions and importance indicators |
+| Requirements | 1.1, 2.1, 4.1 |
+
+**Responsibilities & Constraints**
+- Displays active sessions with status badges
+- Shows timeline entries grouped by time with importance indicators
+- Supports `--importance` flag for filtering
+- Truncates text to terminal-friendly length
+
+**Implementation Notes**
+- Lives in `swift/Sources/CCSessionCLI/Main.swift`
+- Follows existing subcommand pattern (ArgumentParser)
+- Optional `--importance` flag (default: "all")
+
+---
 
 ## Data Models
 

@@ -59,6 +59,26 @@ public final class SessionClient: Sendable {
         try await get("/api/sessions/\(sessionId)/transcript")
     }
 
+    // MARK: - Timeline
+
+    public func getTimeline(
+        limit: Int? = nil,
+        before: String? = nil,
+        importance: String? = nil
+    ) async throws -> TimelineResponse {
+        var path = "/api/timeline"
+        var params: [String] = []
+        if let limit = limit { params.append("limit=\(limit)") }
+        if let before = before {
+            params.append("before=\(before.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? before)")
+        }
+        if let importance = importance, importance != "all" {
+            params.append("importance=\(importance)")
+        }
+        if !params.isEmpty { path += "?" + params.joined(separator: "&") }
+        return try await get(path)
+    }
+
     // MARK: - Launch
 
     public func launchSession(_ request: LaunchRequest) async throws -> LaunchResult {

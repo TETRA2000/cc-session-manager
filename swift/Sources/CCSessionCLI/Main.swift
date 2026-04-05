@@ -10,7 +10,7 @@ struct CCSession: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "cc-session",
         abstract: "Browse Claude Code sessions from a remote CC Session Manager server.",
-        subcommands: [DashboardCmd.self, ProjectsCmd.self, SessionsCmd.self, TranscriptCmd.self]
+        subcommands: [DashboardCmd.self, ProjectsCmd.self, SessionsCmd.self, TranscriptCmd.self, TimelineCmd.self]
     )
 }
 
@@ -98,6 +98,55 @@ struct SessionsCmd: AsyncParsableCommand {
             print("  \(summary)\(status)")
             print("    \(session.messageCount) msgs | \(model)\(branch) | \(session.lastTimestamp.prefix(10))")
             print("    id: \(session.id)")
+        }
+    }
+}
+
+// MARK: - Timeline
+
+struct TimelineCmd: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "timeline", abstract: "Show cross-session timeline feed")
+    @OptionGroup var global: GlobalOptions
+    @Option(name: .long, help: "Filter by importance: all, high, normal") var importance: String = "all"
+    @Option(name: .long, help: "Max entries to show") var limit: Int = 50
+
+    func run() async throws {
+        let client = try global.makeClient()
+        let response = try await client.getTimeline(limit: limit, importance: importance)
+
+        // Show active sessions
+        if !response.activeSessions.isEmpty {
+            print("Active Sessions")
+            print(String(repeating: "-", count: 40))
+            for session in response.activeSessions {
+                let status = session.status.uppercased()
+                let attention = session.hasAttention ? " ⚠" : ""
+                print("  \(session.projectName) [\(status)]\(attention)  \(session.lastActivity.prefix(19))")
+            }
+            print("")
+        }
+
+        // Show timeline entries
+        print("Timeline (\(response.entries.count) entries)")
+        print(String(repeating: "=", count: 60))
+        for entry in response.entries {
+            let role = entry.type.uppercased()
+            let imp = entry.importance == "high" ? " [!]" : ""
+            let attn = entry.isAttention ? " ⚠ NEEDS INPUT" : ""
+            let remote = entry.isRemoteConnected ? " [REMOTE]" : ""
+            print("")
+            print("[\(role)] \(entry.projectName)\(remote)\(imp)\(attn)  \(entry.timestamp.prefix(19))")
+            if let text = entry.text, !text.isEmpty {
+                let truncated = text.count > 200 ? String(text.prefix(200)) + "..." : text
+                print("  \(truncated)")
+            }
+            if !entry.toolNames.isEmpty {
+                print("  tools: \(entry.toolNames.joined(separator: ", "))")
+            }
+        }
+
+        if response.hasMore {
+            print("\n... more entries available (use --limit to increase)")
         }
     }
 }
