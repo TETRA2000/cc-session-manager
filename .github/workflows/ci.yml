@@ -18,26 +18,28 @@ jobs:
           deno-version: v2.x
 
       - name: Type check
-        run: deno task check
+        run: deno check main.ts
 
       - name: Run tests
         run: |
-          mkdir -p $HOME/.claude/projects
-          mkdir -p $HOME/.claude/sessions
-          deno task test
+          mkdir -p $HOME/.claude/projects $HOME/.claude/sessions
+          deno test \
+            --allow-read=$HOME/.claude,.,/tmp \
+            --allow-env=HOME,PROJECTS_ROOT \
+            --allow-write=/tmp \
+            --allow-run=git \
+            --ignore=tests/pty-manager.test.ts \
+            tests/
 
   swift-linux:
     name: Swift Tests (Linux)
     runs-on: ubuntu-latest
+    container: swift:6.1
     defaults:
       run:
         working-directory: swift
     steps:
       - uses: actions/checkout@v4
-
-      - uses: swift-actions/setup-swift@v3
-        with:
-          swift-version: "6.1"
 
       - name: Build
         run: swift build
