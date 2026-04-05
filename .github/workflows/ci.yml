@@ -50,46 +50,21 @@ jobs:
   swift-macos:
     name: Swift Tests (macOS)
     runs-on: macos-26
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build and test
-        id: swift_macos
-        working-directory: swift
+      - name: Select latest Xcode
         run: |
-          set +e
-          swift build 2>&1 | tee /tmp/swift-output.txt
-          BUILD=$?
-          echo "--- BUILD EXIT: $BUILD ---" >> /tmp/swift-output.txt
-          if [ $BUILD -eq 0 ]; then
-            swift test 2>&1 | tee -a /tmp/swift-output.txt
-            TEST=$?
-            echo "--- TEST EXIT: $TEST ---" >> /tmp/swift-output.txt
-          fi
-          exit $((BUILD + ${TEST:-1}))
-        continue-on-error: true
+          LATEST=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using $LATEST"
+          sudo xcode-select -s "$LATEST"
+          xcodebuild -version
+          swift --version
 
-      - name: Post failure to PR
-        if: steps.swift_macos.outcome == 'failure' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const output = fs.readFileSync('/tmp/swift-output.txt', 'utf8');
-            const lines = output.split('\n');
-            const errorLines = lines.filter(l => l.includes('error:') || l.includes('EXIT:'));
-            const tail = lines.slice(-30).join('\n');
-            const body = `### Swift macOS Failure\nErrors:\n\`\`\`\n${errorLines.join('\n')}\n\`\`\`\nTail:\n\`\`\`\n${tail}\n\`\`\``;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: body,
-            });
+      - name: Build
+        working-directory: swift
+        run: swift build
 
-      - name: Fail if needed
-        if: steps.swift_macos.outcome == 'failure'
-        run: exit 1
+      - name: Run tests
+        working-directory: swift
+        run: swift test
