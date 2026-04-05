@@ -132,7 +132,7 @@ final class ModelsTests: XCTestCase {
         let entry = try JSONDecoder().decode(ToolCallEntry.self, from: json)
         XCTAssertEqual(entry.name, "Read")
         XCTAssertEqual(entry.input["file_path"], .string("/src/auth.ts"))
-        XCTAssertEqual(entry.result, "file contents...")
+        XCTAssertEqual(entry.resultText, "file contents...")
         XCTAssertEqual(entry.isError, false)
     }
 
