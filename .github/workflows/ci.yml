@@ -42,76 +42,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build and test
+      - name: Build
+        working-directory: swift
+        run: swift build
+
+      - name: Run tests
         id: swift_linux_test
         working-directory: swift
         run: |
-          set +e
-          swift build 2>&1 | tee /tmp/swift-output.txt
-          BUILD_EXIT=${PIPESTATUS[0]}
-          echo "build exit: $BUILD_EXIT" >> /tmp/swift-output.txt
-          swift test 2>&1 | tee -a /tmp/swift-output.txt
-          TEST_EXIT=${PIPESTATUS[0]}
-          echo "test exit: $TEST_EXIT" >> /tmp/swift-output.txt
-          if [ $BUILD_EXIT -ne 0 ] || [ $TEST_EXIT -ne 0 ]; then
-            exit 1
-          fi
+          swift test 2>&1 | tee /tmp/swift-test-output.txt
+        continue-on-error: true
 
       - name: Post failure details to PR
-        if: failure() && github.event_name == 'pull_request'
+        if: steps.swift_linux_test.outcome == 'failure' && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const output = fs.readFileSync('/tmp/swift-output.txt', 'utf8');
+            const output = fs.readFileSync('/tmp/swift-test-output.txt', 'utf8');
             const lines = output.split('\n');
-            const tail = lines.slice(-80).join('\n');
-            const body = `### Swift Linux CI Failure (last 80 lines)\n\`\`\`\n${tail}\n\`\`\``;
+            const tail = lines.slice(-60).join('\n');
+            const body = `### Swift Linux Test Failure\n\`\`\`\n${tail}\n\`\`\``;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
               body: body,
             });
+
+      - name: Fail if tests failed
+        if: steps.swift_linux_test.outcome == 'failure'
+        run: exit 1
 
   swift-macos:
     name: Swift Tests (macOS)
     runs-on: macos-26
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Swift version
-        run: swift --version
-
-      - name: Build and test
-        id: swift_test
+      - name: Build
         working-directory: swift
-        run: |
-          set +e
-          swift build 2>&1 | tee /tmp/swift-output.txt
-          BUILD_EXIT=${PIPESTATUS[0]}
-          echo "build exit: $BUILD_EXIT" >> /tmp/swift-output.txt
-          swift test 2>&1 | tee -a /tmp/swift-output.txt
-          TEST_EXIT=${PIPESTATUS[0]}
-          echo "test exit: $TEST_EXIT" >> /tmp/swift-output.txt
-          if [ $BUILD_EXIT -ne 0 ] || [ $TEST_EXIT -ne 0 ]; then
-            exit 1
-          fi
+        run: swift build
 
-      - name: Post failure details to PR
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const output = fs.readFileSync('/tmp/swift-output.txt', 'utf8');
-            const body = `### Swift macOS CI Failure\n\`\`\`\n${output.slice(-3000)}\n\`\`\``;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: body,
-            });
+      - name: Run unit tests
+        working-directory: swift
+        run: swift test
