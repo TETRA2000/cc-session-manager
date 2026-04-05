@@ -21,7 +21,10 @@ jobs:
         run: deno task check
 
       - name: Run tests
-        run: deno task test
+        run: |
+          mkdir -p $HOME/.claude/projects
+          mkdir -p $HOME/.claude/sessions
+          deno task test
 
   swift-linux:
     name: Swift Tests (Linux)
@@ -32,9 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: swift-actions/setup-swift@v2
+      - uses: swift-actions/setup-swift@v3
         with:
-          swift-version: "5.9"
+          swift-version: "6.1"
 
       - name: Build
         run: swift build
