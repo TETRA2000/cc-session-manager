@@ -34,12 +34,17 @@ cc-session-manager/
 │   │   ├── projects.ts        # GET /api/projects[/:id]
 │   │   ├── sessions.ts        # GET /api/sessions/:id/transcript
 │   │   ├── launcher.ts        # POST /api/launch
+│   │   ├── timeline.ts        # GET /api/timeline
+│   │   ├── terminal.ts        # WebSocket /api/terminal/ws (network mode)
 │   │   └── wizard.ts          # POST /api/projects/create, GET/PUT settings
 │   └── services/
-│       ├── session-parser.ts  # Streaming JSONL parser
+│       ├── session-parser.ts  # Streaming JSONL parser + timeline extraction
 │       ├── project-discovery.ts # Project scanning + path decoding
 │       ├── session-launcher.ts  # Terminal + browser launch via osascript/open
-│       └── project-manager.ts   # Project creation, settings management
+│       ├── project-manager.ts   # Project creation, settings management
+│       ├── summary-service.ts   # AI summary generation + caching
+│       ├── auth.ts              # Bearer token auth middleware
+│       └── pty-manager.ts       # FFI-based PTY session management
 ├── static/
 │   ├── index.html             # SPA shell with importmap
 │   ├── style.css              # Unified CSS from UI mocks
@@ -54,14 +59,31 @@ cc-session-manager/
 │       ├── session-row.js     # Shared session row (Dashboard + Projects)
 │       ├── dashboard.js       # Dashboard view
 │       ├── projects.js        # Projects list view
+│       ├── timeline.js        # Timeline feed view
 │       ├── tool-call.js       # Collapsible tool call block
 │       ├── transcript.js      # Session transcript view
 │       ├── toast.js           # Auto-dismissing toast notifications
 │       └── wizard.js          # New project wizard form
+├── swift/                     # iOS companion app (Swift Package)
+│   ├── Sources/CCSessionAPI/  # REST/WebSocket API client
+│   ├── Sources/CCSessionCLI/  # CLI tool
+│   └── Tests/                 # Swift tests
+├── ios/                       # SwiftUI iOS app
+│   └── CCSessionManager/      # Timeline views, active sessions sidebar
+├── .github/workflows/ci.yml  # CI: Deno tests, Swift Linux/macOS
 └── tests/
-    ├── fixtures/sample-session.jsonl
+    ├── fixtures/              # Test JSONL data
     ├── session-parser.test.ts
-    └── project-discovery.test.ts
+    ├── project-discovery.test.ts
+    ├── session-launcher.test.ts
+    ├── project-manager.test.ts
+    ├── summary-service.test.ts
+    ├── timeline.test.ts
+    ├── auth.test.ts
+    ├── config.test.ts
+    ├── pty-manager.test.ts
+    ├── api.test.ts
+    └── format.test.ts
 ```
 
 ## Data Flow
@@ -99,6 +121,7 @@ GET  /api/projects/:id               → { project, sessions[] }
 GET  /api/projects/:id/settings      → ProjectSettings
 PUT  /api/projects/:id/settings      → { ok }
 GET  /api/sessions/:id/transcript    → { meta, entries[] }
+GET  /api/timeline                   → { entries[], activeSessions[], hasMore, oldestTimestamp }
 POST /api/launch                     → { ok, error? }
 POST /api/projects/create            → { ok, path?, error? }
 ```
@@ -129,9 +152,9 @@ Enforced via Deno's permission flags at runtime:
 
 ## Phased Development
 
-- **Phase 1**: Core reader — session parser, project discovery, web GUI
-- **Phase 2**: Session launcher — terminal + web launch, remote-control URL detection
-- **Phase 3 (current)**: Project wizard + settings — create projects, per-project metadata
-- **Phase 3**: Project management — new project wizard, templates
+- **Phase 1** ✅: Core reader — session parser, project discovery, web GUI
+- **Phase 2** ✅: Session launcher — terminal + web launch, remote-control URL detection
+- **Phase 3** ✅: Project wizard + settings — create projects, per-project metadata
+- **Phase 3.5** ✅: Network mode, auth, web terminal (PTY), iOS companion, timeline feed
 - **Phase 4**: Dashboard enhancements — activity heatmap, live file watching (SSE)
 - **Phase 5**: Polish — keyboard shortcuts, theme toggle, HTML export, CLI

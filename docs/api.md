@@ -114,6 +114,57 @@ Returns the full parsed transcript for a session. Searches across all projects t
 }
 ```
 
+## GET /api/timeline
+
+Returns a unified chronological feed of messages across all sessions, with importance classification and active session info.
+
+**Query Parameters:**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `limit` | number | 50 | Max entries to return |
+| `before` | string | — | ISO timestamp for pagination (return entries older than this) |
+| `importance` | `"high"` \| `"normal"` \| `"low"` | — | Filter by minimum importance level |
+
+**Response:**
+
+```json
+{
+  "entries": [
+    {
+      "uuid": "8e8d4d0c-831e-4b5f-997e-c2aa1ce877af",
+      "sessionId": "c0855413-6e78-489f-abee-d755d354fdf0",
+      "projectId": "-Users-takahiko-repo-my-app",
+      "projectName": "my-app",
+      "sessionSummary": "Fix authentication bug in login flow",
+      "type": "assistant",
+      "text": "I've fixed the authentication bug by...",
+      "importance": "high",
+      "isAttention": false,
+      "timestamp": "2026-03-27T15:30:00.000Z",
+      "model": "claude-opus-4-6",
+      "toolNames": ["Edit", "Read"],
+      "isRemoteConnected": false
+    }
+  ],
+  "activeSessions": [
+    {
+      "sessionId": "c0855413-...",
+      "projectId": "-Users-takahiko-repo-my-app",
+      "projectName": "my-app",
+      "status": "active",
+      "lastActivity": "2026-03-27T15:30:00.000Z",
+      "hasAttention": false,
+      "isRemoteConnected": false
+    }
+  ],
+  "hasMore": true,
+  "oldestTimestamp": "2026-03-27T14:08:58.896Z"
+}
+```
+
+---
+
 ## POST /api/launch
 
 Launch a Claude Code session in Terminal or browser.
@@ -255,3 +306,42 @@ Update per-project settings. Stored in `$PROJECTS_ROOT/.session-manager/projects
 | `model` | string \| null | Model used (assistant only) |
 | `timestamp` | string | ISO timestamp |
 | `tokens` | `{ input, output }` \| null | Token usage (assistant only) |
+
+### TimelineEntry
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `uuid` | string | Message UUID |
+| `sessionId` | string | Parent session UUID |
+| `projectId` | string | Parent project encoded ID |
+| `projectName` | string | Display name of the project |
+| `sessionSummary` | string \| null | AI-generated session summary |
+| `type` | `"user"` \| `"assistant"` \| `"system"` | Message type |
+| `text` | string \| null | Text content |
+| `importance` | `"high"` \| `"normal"` \| `"low"` | Classified importance level |
+| `isAttention` | boolean | Whether this entry needs user attention |
+| `timestamp` | string | ISO timestamp |
+| `model` | string \| null | Model used (assistant only) |
+| `toolNames` | string[] | Names of tools used in this message |
+| `isRemoteConnected` | boolean | Whether session is remote-connected |
+
+### ActiveSessionInfo
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sessionId` | string | Session UUID |
+| `projectId` | string | Parent project encoded ID |
+| `projectName` | string | Display name of the project |
+| `status` | `"active"` \| `"remote"` | Session status |
+| `lastActivity` | string | ISO timestamp of last activity |
+| `hasAttention` | boolean | Whether session needs attention |
+| `isRemoteConnected` | boolean | Whether session is remote-connected |
+
+### TimelineResponse
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `entries` | TimelineEntry[] | Timeline entries (newest first) |
+| `activeSessions` | ActiveSessionInfo[] | Currently active sessions |
+| `hasMore` | boolean | Whether more entries exist for pagination |
+| `oldestTimestamp` | string \| null | Timestamp of oldest returned entry |
