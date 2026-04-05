@@ -3,7 +3,6 @@ import { join } from "@std/path";
 import type {
   ActiveSessionInfo,
   AppConfig,
-  ImportanceLevel,
   SessionFileInfo,
   TimelineEntry,
   TimelineResponse,
