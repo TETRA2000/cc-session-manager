@@ -22,8 +22,8 @@ deno task check  # TypeScript type check
 ## Architecture
 
 - `main.ts` — Entry point, CLI arg parsing, Deno.serve
-- `src/routes/` — Hono route handlers (dashboard, projects, sessions, launcher)
-- `src/services/` — Business logic (session-parser, project-discovery, session-launcher)
+- `src/routes/` — Hono route handlers (dashboard, projects, sessions, launcher, timeline, terminal)
+- `src/services/` — Business logic (session-parser, project-discovery, session-launcher, summary-service, auth, pty-manager)
 - `src/types.ts` — All TypeScript interfaces
 - `static/` — Frontend SPA (Preact+HTM, served as static files)
 - `static/components/` — Preact components (htm tagged templates)
@@ -38,6 +38,8 @@ deno task check  # TypeScript type check
 - JSONL types: skip `file-history-snapshot`, `progress`, `queue-operation`; skip `isMeta: true`
 - Assistant message content is an array of `text`, `thinking`, `tool_use` blocks
 - Tool results appear in subsequent user messages as `tool_result` blocks
+- Timeline entries extracted via `extractTimelineEntries()` with `classifyImportance()` for high/normal/low ranking
+- Timeline uses 10-second in-memory TTL cache; paginated via `before` timestamp parameter
 - `bridge_status` system messages contain web session URLs from `/remote-control`
 - Active sessions detected from PID files in `~/.claude/sessions/*.json`
 - AI summaries generated via Anthropic SDK (Haiku), cached in `$PROJECTS_ROOT/.session-manager/summaries.json`
@@ -57,6 +59,10 @@ Tests live in `tests/` and use `@std/assert`. Test files:
 | `session-launcher.test.ts` | Shell/AppleScript escaping, launch validation |
 | `project-manager.test.ts` | Project name validation, creation (dir, git, templates), settings CRUD |
 | `summary-service.test.ts` | Summary cache lookup, staleness detection, persistence |
+| `timeline.test.ts` | Timeline route, importance classification, pagination |
+| `auth.test.ts` | Bearer token auth middleware, timing-safe comparison |
+| `config.test.ts` | Configuration loading, CLI arg parsing |
+| `pty-manager.test.ts` | PTY session lifecycle, FFI manager |
 | `api.test.ts` | HTTP route integration (dashboard, projects, sessions, launch, static files) |
 | `format.test.ts` | Frontend format utilities (tokens, paths, truncation) |
 

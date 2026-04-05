@@ -11,6 +11,7 @@ A local web GUI for browsing, searching, and managing Claude Code session histor
 5. **Web terminal** — WebSocket-based PTY sessions via FFI (`@sigma/pty-ffi`), enabling in-browser terminal access when running in network mode.
 6. **Network access & auth** — Configurable `--host 0.0.0.0` mode for LAN/Tailscale access with auto-generated Bearer token authentication; localhost remains unauthenticated.
 7. **iOS companion app** — Native Swift client (`swift/`) using SwiftTerm for terminal rendering and the same REST/WebSocket API.
+8. **Timeline** — Unified chronological feed across all sessions with importance classification (high/normal/low), attention flagging, and infinite-scroll pagination.
 
 ## Target Use Cases
 
@@ -25,5 +26,5 @@ Claude Code stores rich session data in local JSONL files, but provides no built
 ## Roadmap Context
 
 - Phases 1-3 (core reader, launcher, wizard) are complete.
-- Network mode, auth, PTY/terminal, and iOS companion app have shipped.
-- Phase 4 (live updates, SSE, activity heatmap) and Phase 5 (keyboard shortcuts, theme toggle, HTML export) are planned but not started.
+- Network mode, auth, PTY/terminal, iOS companion app, and timeline have shipped.
+- Phase 4 remainders (SSE live updates, activity heatmap) and Phase 5 (keyboard shortcuts, theme toggle, HTML export) are planned but not started.

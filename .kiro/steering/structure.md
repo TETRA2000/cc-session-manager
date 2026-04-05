@@ -13,12 +13,12 @@ Layered architecture with clear backend/frontend separation. Backend follows a *
 ### Routes (`src/routes/`)
 **Purpose**: HTTP request handling — parse params, call services, return JSON responses.
 **Pattern**: Each file exports a factory function `xxxRoutes(config: AppConfig): Hono` that returns a Hono sub-app. All route sub-apps are mounted in `api.ts`. Terminal routes are dynamically imported only in network mode.
-**Example**: `dashboardRoutes(config)` → `GET /api/dashboard`, `terminalRoutes(config, ptyManager)` → WebSocket at `/api/terminal/ws`
+**Example**: `dashboardRoutes(config)` → `GET /api/dashboard`, `timelineRoutes(config)` → `GET /api/timeline`, `terminalRoutes(config, ptyManager)` → WebSocket at `/api/terminal/ws`
 
 ### Services (`src/services/`)
 **Purpose**: Business logic — data parsing, discovery, launching, summarization, auth, PTY management.
 **Pattern**: Pure functions and async helpers. No HTTP concerns. Services receive config or paths as parameters, not Hono context. Stateful services (e.g., `PTYManager`) are instantiated once and passed to route factories.
-**Example**: `session-parser.ts` exports `parseSessionMetadata()`, `parseTranscript()`, `getSessionFiles()`; `auth.ts` exports `authMiddleware()` and `timingSafeEqual()`
+**Example**: `session-parser.ts` exports `parseSessionMetadata()`, `parseTranscript()`, `extractTimelineEntries()`, `classifyImportance()`; `auth.ts` exports `authMiddleware()` and `timingSafeEqual()`
 
 ### Types (`src/types.ts`)
 **Purpose**: All TypeScript interfaces in one file — raw JSONL types, API response types, config, request/result types.
@@ -30,7 +30,7 @@ Layered architecture with clear backend/frontend separation. Backend follows a *
 
 ### Frontend components (`static/components/`)
 **Purpose**: Preact components using htm tagged templates.
-**Pattern**: One component per file, named by feature (e.g., `dashboard.js`, `projects.js`, `transcript.js`). Components export a single named function.
+**Pattern**: One component per file, named by feature (e.g., `dashboard.js`, `projects.js`, `transcript.js`, `timeline.js`). Components export a single named function.
 **Example**: `export function DashboardView() { ... }` using `html\`<div>...</div>\``
 
 ### Frontend utilities (`static/lib/`)
@@ -39,7 +39,7 @@ Layered architecture with clear backend/frontend separation. Backend follows a *
 
 ### Tests (`tests/`)
 **Purpose**: Unit and integration tests.
-**Pattern**: `<service-name>.test.ts` mirrors service files. `api.test.ts` covers route integration. `fixtures/` holds test JSONL data. PTY tests run separately via `deno task test:pty` (requires `--allow-all`).
+**Pattern**: `<service-name>.test.ts` mirrors service files. `api.test.ts` covers route integration. `timeline.test.ts` covers timeline route and importance classification. `fixtures/` holds test JSONL data. PTY tests run separately via `deno task test:pty` (requires `--allow-all`).
 
 ### iOS app (`swift/`)
 **Purpose**: Native iOS companion app consuming the same Deno backend API.
