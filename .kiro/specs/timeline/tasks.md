@@ -138,3 +138,39 @@
   - Test pinned entries are correctly filtered from attention entries with active sessions
   - Test auto-scroll state transitions: on → paused (scroll away), paused → on (scroll back/click banner), disabled toggle
   - _Requirements: 5.1, 5.3, 6.1, 6.2_
+
+- [x] 6. Add iOS client timeline support
+- [x] 6.1 (P) Add timeline data models to the Swift API client
+  - Add TimelineEntry, ActiveSessionInfo, TimelineResponse as Codable/Sendable/Identifiable types
+  - All fields match the backend API response contract
+  - _Requirements: 1.2, 2.1, 4.1, 4.2, 7.1, 7.2_
+
+- [x] 6.2 (P) Add timeline API method to the Swift session client
+  - Accept optional limit, before, importance parameters
+  - Build query string and call existing GET infrastructure
+  - Return decoded TimelineResponse
+  - _Requirements: 1.1, 2.2_
+
+- [x] 6.3 Add timeline CLI subcommand as the default command
+  - Display active sessions with status badges and attention indicators
+  - Show timeline entries with importance markers and text preview
+  - Support --importance and --limit flags
+  - Set as the default subcommand (runs when no subcommand specified)
+  - _Requirements: 1.1, 2.1, 4.1_
+
+- [x] 6.4 (P) Add Swift model decoding tests for timeline types
+  - Test TimelineEntry decoding with all fields including toolNames array
+  - Test ActiveSessionInfo decoding with status and hasAttention
+  - Test TimelineResponse decoding with entries, activeSessions, hasMore, oldestTimestamp
+  - _Requirements: 1.2, 4.2_
+
+- [x] 7. Post-validation performance and correctness fixes
+- [x] 7.1 Merge metadata extraction into the single-pass JSONL reader
+  - Return session summary and remote status alongside timeline entries from a single file read
+  - Eliminate the separate metadata extraction call that doubled I/O per session
+  - _Requirements: 1.1, 7.1_
+
+- [x] 7.2 (P) Add low importance filter support to the API
+  - Accept importance=low as a valid filter parameter
+  - Filter to show only low-importance entries when selected
+  - _Requirements: 2.2_
