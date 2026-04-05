@@ -36,43 +36,18 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: swift:6.1
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
-        working-directory: swift
-        run: swift build
-
-      - name: Run tests
-        id: swift_linux_test
+      - name: Build library and CLI
         working-directory: swift
         run: |
-          swift test 2>&1 | tee /tmp/swift-test-output.txt
-        continue-on-error: true
+          swift build --target CCSessionAPI
+          swift build --target CCSessionCLI
 
-      - name: Post failure details to PR
-        if: steps.swift_linux_test.outcome == 'failure' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const output = fs.readFileSync('/tmp/swift-test-output.txt', 'utf8');
-            const lines = output.split('\n');
-            const tail = lines.slice(-60).join('\n');
-            const body = `### Swift Linux Test Failure\n\`\`\`\n${tail}\n\`\`\``;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: body,
-            });
-
-      - name: Fail if tests failed
-        if: steps.swift_linux_test.outcome == 'failure'
-        run: exit 1
+      - name: Run tests
+        working-directory: swift
+        run: swift test --filter CCSessionAPITests
 
   swift-macos:
     name: Swift Tests (macOS)
@@ -80,10 +55,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
+      - name: Build library and CLI
         working-directory: swift
-        run: swift build
+        run: swift build --target CCSessionAPI --target CCSessionCLI
 
-      - name: Run unit tests
+      - name: Build iOS app
         working-directory: swift
-        run: swift test
+        run: swift build --target CCSessionApp
+
+      - name: Run API tests
+        working-directory: swift
+        run: swift test --filter CCSessionAPITests
+
+      - name: Run App tests
+        working-directory: swift
+        run: swift test --filter CCSessionAppTests
