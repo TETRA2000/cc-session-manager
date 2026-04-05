@@ -16,7 +16,6 @@ import {
 } from "../services/project-discovery.ts";
 import {
   classifyImportance,
-  extractSessionMetadata,
   extractTimelineEntries,
 } from "../services/session-parser.ts";
 import { attachSummaries } from "../services/summary-service.ts";
@@ -37,7 +36,7 @@ export function clearTimelineCache(): void {
   cache = null;
 }
 
-const VALID_IMPORTANCE = new Set(["all", "high", "normal"]);
+const VALID_IMPORTANCE = new Set(["all", "high", "normal", "low"]);
 
 export function timelineRoutes(config: AppConfig): Hono {
   const app = new Hono();
@@ -71,11 +70,13 @@ export function timelineRoutes(config: AppConfig): Hono {
     // ─── Apply post-cache filtering ───
     let filtered = cache.entries;
 
-    // Importance filter
+    // Importance filter (cumulative: high ⊂ normal ⊂ all)
     if (importanceParam === "high") {
       filtered = filtered.filter((e) => e.importance === "high");
     } else if (importanceParam === "normal") {
       filtered = filtered.filter((e) => e.importance === "high" || e.importance === "normal");
+    } else if (importanceParam === "low") {
+      filtered = filtered.filter((e) => e.importance === "low");
     }
 
     // Before cursor
@@ -141,17 +142,15 @@ async function buildTimelineData(config: AppConfig): Promise<{
 
   for (const f of recentFiles) {
     try {
-      // Extract lightweight entries
-      const rawEntries = await extractTimelineEntries(f.jsonlPath, f.id, f.projectId, {
+      // Single-pass extraction: entries + metadata (no double I/O)
+      const result = await extractTimelineEntries(f.jsonlPath, f.id, f.projectId, {
         limit: 20,
       });
+      const rawEntries = result.entries;
 
-      // Get session metadata for summary and remote status
-      const meta = await extractSessionMetadata(f.jsonlPath, f.id, f.projectId);
-      meta.isActive = activeIds.has(f.id);
       sessionMetaMap.set(f.id, {
-        summary: meta.aiSummary ?? meta.summary,
-        isRemoteConnected: meta.isRemoteConnected,
+        summary: result.summary,
+        isRemoteConnected: result.isRemoteConnected,
       });
 
       const isActive = activeIds.has(f.id);

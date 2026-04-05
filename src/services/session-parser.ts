@@ -361,16 +361,48 @@ export function classifyImportance(
 
 // ─── Lightweight timeline entry extraction ───
 
+type RawTimelineEntry = Omit<TimelineEntry, "importance" | "isAttention" | "projectName" | "sessionSummary" | "isRemoteConnected">;
+
+export interface TimelineExtractionResult {
+  entries: RawTimelineEntry[];
+  summary: string;
+  isRemoteConnected: boolean;
+}
+
 export async function extractTimelineEntries(
   filePath: string,
   sessionId: string,
   projectId: string,
   options?: { limit?: number; before?: string },
-): Promise<Omit<TimelineEntry, "importance" | "isAttention" | "projectName" | "sessionSummary" | "isRemoteConnected">[]> {
-  const entries: Omit<TimelineEntry, "importance" | "isAttention" | "projectName" | "sessionSummary" | "isRemoteConnected">[] = [];
+): Promise<TimelineExtractionResult> {
+  const entries: RawTimelineEntry[] = [];
+  let firstUserText = "";
+  let isRemoteConnected = false;
 
   for await (const line of readJsonlStream(filePath)) {
+    // Track remote control state (same logic as extractSessionMetadata)
+    if (line.type === "system") {
+      const sMsg = line as SystemMessage;
+      if (sMsg.subtype === "bridge_status") {
+        const rawLine = line as unknown as Record<string, unknown>;
+        if (typeof rawLine.url === "string") {
+          isRemoteConnected = true;
+        }
+      } else if (sMsg.subtype === "local_command" && sMsg.content?.includes("Remote Control disconnected")) {
+        isRemoteConnected = false;
+      }
+    }
+
     if (!isDisplayable(line) || line.isMeta) continue;
+
+    // Extract first user text for summary
+    if (!firstUserText && line.type === "user") {
+      const uMsg = line as UserMessage;
+      const text = extractTextFromContent(uMsg.message.content);
+      if (text) {
+        firstUserText = text.length > 120 ? text.slice(0, 120) + "..." : text;
+      }
+    }
 
     const timestamp = line.timestamp ?? "";
 
@@ -440,11 +472,15 @@ export async function extractTimelineEntries(
   entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
   // Apply limit
-  if (options?.limit && entries.length > options.limit) {
-    return entries.slice(0, options.limit);
-  }
+  const limited = (options?.limit && entries.length > options.limit)
+    ? entries.slice(0, options.limit)
+    : entries;
 
-  return entries;
+  return {
+    entries: limited,
+    summary: firstUserText || "(no content)",
+    isRemoteConnected,
+  };
 }
 
 // ─── Helpers ───

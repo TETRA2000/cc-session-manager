@@ -100,24 +100,30 @@ Deno.test("classifyImportance: system message is high", () => {
 // ─── extractTimelineEntries tests ───
 
 Deno.test("extractTimelineEntries: extracts displayable entries from JSONL", async () => {
-  const entries = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
+  const result = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
+  const entries = result.entries;
 
-  // Should include: usr-0002 (user), ast-0001 (assistant), ast-0002 (assistant),
-  // sys-0001 (system), bridge-0001 (system), bridge-0002 (system)
-  // Should exclude: file-history-snapshot, isMeta user (usr-0001), progress, tool-result-only user (usr-0003)
   const types = entries.map((e) => e.type);
   assertEquals(types.includes("user"), true);
   assertEquals(types.includes("assistant"), true);
 
-  // All entries should have sessionId and projectId
   for (const e of entries) {
     assertEquals(e.sessionId, "session-abc-123");
     assertEquals(e.projectId, "test-project");
   }
 });
 
+Deno.test("extractTimelineEntries: returns session metadata in single pass", async () => {
+  const result = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
+
+  // Summary from first user message
+  assertEquals(result.summary, "Add a login page with email and password fields");
+  // Remote was connected then disconnected in fixture
+  assertEquals(result.isRemoteConnected, false);
+});
+
 Deno.test("extractTimelineEntries: entries are sorted by timestamp descending", async () => {
-  const entries = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
+  const { entries } = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
 
   for (let i = 1; i < entries.length; i++) {
     assertEquals(entries[i - 1].timestamp >= entries[i].timestamp, true);
@@ -125,25 +131,24 @@ Deno.test("extractTimelineEntries: entries are sorted by timestamp descending", 
 });
 
 Deno.test("extractTimelineEntries: limit parameter caps entries", async () => {
-  const entries = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project", {
+  const { entries } = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project", {
     limit: 2,
   });
   assertEquals(entries.length, 2);
 });
 
 Deno.test("extractTimelineEntries: before parameter filters by timestamp", async () => {
-  const entries = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project", {
+  const { entries } = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project", {
     before: "2026-03-28T10:00:06.000Z",
   });
 
-  // Only entries with timestamp < 2026-03-28T10:00:06.000Z
   for (const e of entries) {
     assertEquals(e.timestamp < "2026-03-28T10:00:06.000Z", true);
   }
 });
 
 Deno.test("extractTimelineEntries: text is truncated to 200 chars", async () => {
-  const entries = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
+  const { entries } = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
 
   for (const e of entries) {
     if (e.text) {
@@ -153,9 +158,8 @@ Deno.test("extractTimelineEntries: text is truncated to 200 chars", async () => 
 });
 
 Deno.test("extractTimelineEntries: extracts tool names from assistant messages", async () => {
-  const entries = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
+  const { entries } = await extractTimelineEntries(FIXTURE_PATH, "session-abc-123", "test-project");
 
-  // ast-0001 has write_file tool use
   const assistantWithTool = entries.find(
     (e) => e.type === "assistant" && e.toolNames.length > 0,
   );

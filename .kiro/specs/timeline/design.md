@@ -233,7 +233,7 @@ stateDiagram-v2
 
 | Method | Endpoint | Request | Response | Errors |
 |--------|----------|---------|----------|--------|
-| GET | /api/timeline | `?limit=50&before=<ISO timestamp>&importance=all\|high\|normal` | `TimelineResponse` | 500 |
+| GET | /api/timeline | `?limit=50&before=<ISO timestamp>&importance=all\|high\|normal\|low` | `TimelineResponse` | 500 |
 
 ```typescript
 interface TimelineResponse {
@@ -305,15 +305,21 @@ Classification rules:
 ##### Service Interface
 
 ```typescript
+interface TimelineExtractionResult {
+  entries: RawTimelineEntry[];
+  summary: string;
+  isRemoteConnected: boolean;
+}
+
 async function extractTimelineEntries(
   filePath: string,
   sessionId: string,
   projectId: string,
   options?: { limit?: number; before?: string }
-): Promise<TimelineEntry[]>;
+): Promise<TimelineExtractionResult>;
 ```
 
-Returns entries sorted by timestamp descending. `limit` caps entries per session. `before` filters entries older than the given timestamp for pagination.
+Returns entries sorted by timestamp descending plus session metadata (summary, remote status) extracted in a single JSONL pass. This eliminates the need for a separate `extractSessionMetadata()` call, reducing I/O by 50%. `limit` caps entries per session. `before` filters entries older than the given timestamp for pagination.
 
 ---
 
