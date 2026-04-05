@@ -10,7 +10,8 @@ struct CCSession: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "cc-session",
         abstract: "Browse Claude Code sessions from a remote CC Session Manager server.",
-        subcommands: [DashboardCmd.self, ProjectsCmd.self, SessionsCmd.self, TranscriptCmd.self, TimelineCmd.self]
+        subcommands: [DashboardCmd.self, ProjectsCmd.self, SessionsCmd.self, TranscriptCmd.self, TimelineCmd.self],
+        defaultSubcommand: TimelineCmd.self
     )
 }
 
