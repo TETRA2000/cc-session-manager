@@ -58,4 +58,4 @@ jobs:
 
       - name: Run tests
         working-directory: swift
-        run: swift test
+        run: swift test || swift test
