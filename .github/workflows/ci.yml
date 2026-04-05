@@ -58,4 +58,10 @@ jobs:
 
       - name: Run tests
         working-directory: swift
-        run: swift test || swift test
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee /tmp/swift-test.log
+
+      - name: Show errors on failure
+        if: failure()
+        run: grep -i "error:" /tmp/swift-test.log || tail -30 /tmp/swift-test.log
