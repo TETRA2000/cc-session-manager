@@ -25,11 +25,11 @@ jobs:
 
       - name: Run tests
         run: |
-          mkdir -p $HOME/.claude/projects $HOME/.claude/sessions
+          mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions" "$HOME/Projects/.session-manager"
           deno test \
-            --allow-read=$HOME/.claude,.,/tmp \
+            --allow-read="$HOME/.claude","$HOME/Projects",.,/tmp \
             --allow-env=HOME,PROJECTS_ROOT \
-            --allow-write=/tmp \
+            --allow-write="$HOME/Projects",/tmp \
             --allow-run=git \
             --ignore=tests/pty-manager.test.ts \
             tests/
