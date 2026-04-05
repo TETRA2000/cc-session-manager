@@ -1,15 +1,15 @@
-#if canImport(SwiftUI)
 import SwiftUI
+import CCSessionAPI
 
 
-public struct TimelineView: View {
-    @Bindable public var viewModel: TimelineViewModel
+struct TimelineView: View {
+    @Bindable var viewModel: TimelineViewModel
 
-    public init(viewModel: TimelineViewModel) {
+    init(viewModel: TimelineViewModel) {
         self.viewModel = viewModel
     }
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 FilterBar(
@@ -59,4 +59,3 @@ public struct TimelineView: View {
     }
 }
 
-#endif

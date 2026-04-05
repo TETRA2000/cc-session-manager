@@ -1,4 +1,3 @@
-#if canImport(SwiftUI)
 import SwiftUI
 
 struct FilterBar: View {
@@ -78,4 +77,3 @@ struct FilterBar: View {
     }
 }
 
-#endif

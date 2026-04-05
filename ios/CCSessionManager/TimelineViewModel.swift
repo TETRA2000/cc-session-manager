@@ -1,31 +1,31 @@
-#if canImport(SwiftUI)
 import SwiftUI
+import CCSessionAPI
 
 @Observable
-public final class TimelineViewModel {
-    public var entries: [TimelineEntry] = []
-    public var activeSessions: [ActiveSessionInfo] = []
-    public var loading = false
-    public var error: String?
-    public var importance: String = "all"
-    public var selectedSessionId: String?
-    public var autoScrollEnabled = true
-    public var hasMore = false
+final class TimelineViewModel {
+    var entries: [TimelineEntry] = []
+    var activeSessions: [ActiveSessionInfo] = []
+    var loading = false
+    var error: String?
+    var importance: String = "all"
+    var selectedSessionId: String?
+    var autoScrollEnabled = true
+    var hasMore = false
 
     private var oldestTimestamp: String?
     private var client: SessionClient?
     private var pollTask: Task<Void, Never>?
 
-    public init() {}
+    init() {}
 
-    public var pinnedEntries: [TimelineEntry] {
+    var pinnedEntries: [TimelineEntry] {
         let activeIds = Set(activeSessions.map(\.sessionId))
         return entries
             .filter { $0.isAttention && activeIds.contains($0.sessionId) }
             .sorted { $0.timestamp < $1.timestamp }
     }
 
-    public var filteredEntries: [TimelineEntry] {
+    var filteredEntries: [TimelineEntry] {
         var result = entries
         if let sid = selectedSessionId {
             result = result.filter { $0.sessionId == sid }
@@ -33,23 +33,23 @@ public final class TimelineViewModel {
         return result
     }
 
-    public var counts: [String: Int] {
+    var counts: [String: Int] {
         var c = ["all": entries.count, "high": 0, "normal": 0, "low": 0]
         for e in entries { c[e.importance, default: 0] += 1 }
         return c
     }
 
-    public func connect(client: SessionClient) {
+    func connect(client: SessionClient) {
         self.client = client
         startPolling()
     }
 
-    public func disconnect() {
+    func disconnect() {
         pollTask?.cancel()
         pollTask = nil
     }
 
-    public func startPolling() {
+    func startPolling() {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -59,7 +59,7 @@ public final class TimelineViewModel {
         }
     }
 
-    public func fetchTimeline() async {
+    func fetchTimeline() async {
         guard let client else { return }
         do {
             let imp = importance == "all" ? nil : importance
@@ -80,7 +80,7 @@ public final class TimelineViewModel {
         }
     }
 
-    public func loadMore() async {
+    func loadMore() async {
         guard let client, let before = oldestTimestamp, hasMore else { return }
         do {
             let imp = importance == "all" ? nil : importance
@@ -95,15 +95,14 @@ public final class TimelineViewModel {
         }
     }
 
-    public func setImportance(_ value: String) {
+    func setImportance(_ value: String) {
         importance = value
         loading = true
         Task { await fetchTimeline() }
     }
 
-    public func toggleSession(_ sessionId: String) {
+    func toggleSession(_ sessionId: String) {
         selectedSessionId = selectedSessionId == sessionId ? nil : sessionId
     }
 }
 
-#endif

@@ -1,5 +1,5 @@
-#if canImport(SwiftUI)
 import SwiftUI
+import CCSessionAPI
 
 
 struct FeedEntryView: View {
@@ -135,4 +135,3 @@ struct AttentionBadge: View {
     }
 }
 
-#endif

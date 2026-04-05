@@ -1,5 +1,5 @@
-#if canImport(SwiftUI)
 import SwiftUI
+import CCSessionAPI
 
 
 struct ActiveSessionsSidebar: View {
@@ -120,4 +120,3 @@ func relativeTime(_ iso: String) -> String {
     return "\(diff / 86400)d ago"
 }
 
-#endif

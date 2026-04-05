@@ -1,5 +1,5 @@
-#if canImport(SwiftUI)
 import SwiftUI
+import CCSessionAPI
 
 
 struct TimelineFeed: View {
@@ -171,4 +171,3 @@ private func timeLabel(_ timestamp: String) -> String {
     return "\(days) DAY\(days > 1 ? "S" : "") AGO"
 }
 
-#endif
