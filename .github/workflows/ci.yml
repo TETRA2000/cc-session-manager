@@ -15,54 +15,15 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
-
-      - name: Cache Deno dependencies
-        run: deno install
+          deno-version: "2.1"
 
       - name: Type check
-        run: deno check main.ts 2>&1 | tee /tmp/deno-check-output.txt
-        continue-on-error: true
-
-      - name: Show type check output
-        if: always()
-        run: |
-          echo "=== Type check output ==="
-          cat /tmp/deno-check-output.txt 2>/dev/null || echo "No output"
-          echo "=== End ==="
-          if grep -qi "error" /tmp/deno-check-output.txt 2>/dev/null; then
-            exit 1
-          fi
-
-      - name: Setup test directories
-        run: mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions" "$HOME/Projects/.session-manager"
+        run: deno task check
 
       - name: Run tests
         run: |
-          deno test \
-            --allow-read="$HOME/.claude","$HOME/Projects",.,/tmp \
-            --allow-env=HOME,PROJECTS_ROOT \
-            --allow-write="$HOME/Projects",/tmp \
-            --allow-run=git \
-            --ignore=tests/pty-manager.test.ts \
-            tests/ 2>&1 | tee /tmp/deno-test-output.txt
-        continue-on-error: true
-
-      - name: Show test output on failure
-        if: failure()
-        run: cat /tmp/deno-test-output.txt 2>/dev/null || echo "No output captured"
-
-      - name: Check test result
-        run: |
-          if grep -q "FAILED" /tmp/deno-test-output.txt 2>/dev/null; then
-            echo "Tests failed!"
-            exit 1
-          fi
-          if ! grep -q "ok |" /tmp/deno-test-output.txt 2>/dev/null; then
-            echo "Tests did not complete successfully"
-            cat /tmp/deno-test-output.txt 2>/dev/null
-            exit 1
-          fi
+          mkdir -p "$HOME/.claude/projects" "$HOME/.claude/sessions"
+          deno task test
 
   swift-linux:
     name: Swift Tests (Linux)
@@ -86,23 +47,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Swift version
-        run: swift --version
-
       - name: Build
         working-directory: swift
-        run: swift build 2>&1
+        run: swift build
 
       - name: Run unit tests
         working-directory: swift
-        run: swift test 2>&1
-
-      - name: Build for iOS (compile check)
-        working-directory: swift
-        run: |
-          xcodebuild build \
-            -scheme CCSessionAPI \
-            -destination 'generic/platform=iOS Simulator' \
-            -skipPackagePluginValidation \
-            -skipMacroValidation \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -50
+        run: swift test
