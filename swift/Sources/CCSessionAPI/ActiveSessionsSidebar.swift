@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import CCSessionAPI
 
@@ -118,3 +119,5 @@ func relativeTime(_ iso: String) -> String {
     if diff < 86400 { return "\(diff / 3600)h ago" }
     return "\(diff / 86400)d ago"
 }
+
+#endif

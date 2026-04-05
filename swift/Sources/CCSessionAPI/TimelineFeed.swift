@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import CCSessionAPI
 
@@ -169,3 +170,5 @@ private func timeLabel(_ timestamp: String) -> String {
     let days = hours / 24
     return "\(days) DAY\(days > 1 ? "S" : "") AGO"
 }
+
+#endif

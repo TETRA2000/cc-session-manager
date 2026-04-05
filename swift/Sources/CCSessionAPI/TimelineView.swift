@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import CCSessionAPI
 
@@ -53,3 +54,5 @@ struct TimelineView: View {
         }
     }
 }
+
+#endif

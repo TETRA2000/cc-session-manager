@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import CCSessionAPI
 
@@ -133,3 +134,5 @@ struct AttentionBadge: View {
             )
     }
 }
+
+#endif

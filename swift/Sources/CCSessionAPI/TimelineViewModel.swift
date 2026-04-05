@@ -1,3 +1,4 @@
+#if canImport(SwiftUI)
 import SwiftUI
 import CCSessionAPI
 
@@ -103,3 +104,5 @@ final class TimelineViewModel {
         selectedSessionId = selectedSessionId == sessionId ? nil : sessionId
     }
 }
+
+#endif

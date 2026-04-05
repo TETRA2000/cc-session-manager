@@ -39,15 +39,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build library and CLI
+      - name: Build
         working-directory: swift
-        run: |
-          swift build --target CCSessionAPI
-          swift build --target CCSessionCLI
+        run: swift build
 
       - name: Run tests
         working-directory: swift
-        run: swift test --filter CCSessionAPITests
+        run: swift test
 
   swift-macos:
     name: Swift Tests (macOS)
@@ -55,18 +53,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build library and CLI
+      - name: Build
         working-directory: swift
-        run: swift build --target CCSessionAPI --target CCSessionCLI
+        run: swift build
 
-      - name: Build iOS app
+      - name: Run tests
         working-directory: swift
-        run: swift build --target CCSessionApp
-
-      - name: Run API tests
-        working-directory: swift
-        run: swift test --filter CCSessionAPITests
-
-      - name: Run App tests
-        working-directory: swift
-        run: swift test --filter CCSessionAppTests
+        run: swift test
