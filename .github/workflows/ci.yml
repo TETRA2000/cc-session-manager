@@ -39,10 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
-        working-directory: swift
-        run: swift build
-
       - name: Run tests
         working-directory: swift
         run: swift test
@@ -59,10 +55,6 @@ jobs:
           echo "Using $LATEST"
           sudo xcode-select -s "$LATEST"
           xcodebuild -version
-
-      - name: Build
-        working-directory: swift
-        run: swift build
 
       - name: Run tests
         working-directory: swift
